@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehilá Admin | Sistema de Administración de Sinagoga</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern minimalist icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="ph ph-synagogue text-accent icon-large"></i>
+                <h1 class="brand-title">Kehilá<span class="text-accent">Admin</span></h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="members">
+                    <i class="ph ph-users"></i>
+                    <span>Miembros</span>
+                </a>
+                <a href="#" class="nav-item" data-view="finances">
+                    <i class="ph ph-currency-circle-dollar"></i>
+                    <span>Finanzas</span>
+                </a>
+                <a href="#" class="nav-item" data-view="events">
+                    <i class="ph ph-calendar-blank"></i>
+                    <span>Eventos & Clases</span>
+                </a>
+                <a href="#" class="nav-item" data-view="honors">
+                    <i class="ph ph-star"></i>
+                    <span>Honores (Aliyot)</span>
+                </a>
+                <div class="sidebar-divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                <a href="#" class="nav-item" data-view="communications">
+                    <i class="ph ph-envelope-simple"></i>
+                    <span>Comunicaciones</span>
+                </a>
+                <a href="#" class="nav-item kids-nav" data-view="kids">
+                    <i class="ph ph-star-four" style="color: var(--accent);"></i>
+                    <span style="font-weight: 600;">Shabat Infantil</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">AD</div>
+                    <div class="user-info">
+                        <span class="user-name">Admin</span>
+                        <span class="user-role">Administrador</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Buscar miembros, donaciones...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon"><i class="ph ph-bell"></i><span class="badge">3</span></button>
+                    <button class="btn-primary"><i class="ph ph-plus"></i> Nuevo Registro</button>
+                </div>
+            </header>
+
+            <div class="content-wrapper" id="view-container">
+                <!-- Views will be injected here via JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- View Templates (Hidden from DOM) -->
+    <template id="view-dashboard">
+        <div class="view-header">
+            <h2 class="view-title">Dashboard</h2>
+            <p class="view-subtitle">Resumen general de la congregación</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper blue-bg">
+                    <i class="ph ph-users-three"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Familias Activas</h3>
+                    <p class="stat-value">142</p>
+                    <span class="stat-trend positive"><i class="ph ph-trend-up"></i> +5 este mes</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper gold-bg">
+                    <i class="ph ph-coins"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Donaciones (Mes)</h3>
+                    <p class="stat-value">$12,450</p>
+                    <span class="stat-trend positive"><i class="ph ph-trend-up"></i> +12% vs mes anterior</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper purple-bg">
+                    <i class="ph ph-calendar-star"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Próximos Eventos</h3>
+                    <p class="stat-value">4</p>
+                    <span class="stat-trend neutral">En los próximos 7 días</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper red-bg">
+                    <i class="ph ph-candle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Yahrzeits (Semana)</h3>
+                    <p class="stat-value">7</p>
+                    <span class="stat-trend neutral">Ver lista completa</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card col-span-2">
+                <div class="card-header">
+                    <h3>Próximos Yahrzeits</h3>
+                    <button class="btn-link">Ver Todos</button>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="yahrzeit-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Próximos Servicios</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="services-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-members">
+        <div class="view-header flex-between">
+            <div>
+                <h2 class="view-title">Directorio de Miembros</h2>
+                <p class="view-subtitle">Gestiona las familias e individuos de la congregación</p>
+            </div>
+            <button class="btn-primary"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
+        </div>
+
+        <div class="card">
+            <div class="table-controls">
+                <div class="filter-group">
+                    <select class="select-input">
+                        <option>Todos los estados</option>
+                        <option>Activo</option>
+                        <option>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Familia</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-communications">
+        <div class="view-header">
+            <h2 class="view-title">Comunicaciones</h2>
+            <p class="view-subtitle">Envía boletines y notificaciones a la congregación</p>
+        </div>
+
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 300px;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Nuevo Mensaje</h3>
+                </div>
+                <div class="card-body" style="padding: 24px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Destinatarios</label>
+                        <select class="select-input" style="width: 100%;">
+                            <option>Toda la congregación</option>
+                            <option>Solo miembros activos</option>
+                            <option>Familias con niños (Shabat Infantil)</option>
+                            <option>Junta Directiva</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Asunto</label>
+                        <input type="text" class="select-input" style="width: 100%;" placeholder="Ej. Horarios de Shabat y Boletín Semanal">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Mensaje</label>
+                        <textarea class="select-input" style="width: 100%; height: 200px; resize: vertical;" placeholder="Escribe tu mensaje aquí..."></textarea>
+                    </div>
+                    <div class="flex-between" style="justify-content: flex-end; gap: 12px;">
+                        <button class="btn-link" style="color: var(--text-muted);"><i class="ph ph-paperclip"></i> Adjuntar archivo</button>
+                        <button class="btn-primary" onclick="alert('Mensaje enviado exitosamente')"><i class="ph ph-paper-plane-right"></i> Enviar Mensaje</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Mensajes Recientes</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-item" style="padding: 12px 20px;">
+                            <div class="item-icon" style="background: var(--success-bg); color: var(--success); width: 32px; height: 32px; font-size: 16px;"><i class="ph ph-check"></i></div>
+                            <div class="item-content">
+                                <div class="item-title" style="font-size: 13px;">Recordatorio Yahrzeits</div>
+                                <div class="item-desc" style="font-size: 11px;">Enviado hoy</div>
+                            </div>
+                        </li>
+                        <li class="list-item" style="padding: 12px 20px;">
+                            <div class="item-icon" style="background: var(--info-bg); color: var(--info); width: 32px; height: 32px; font-size: 16px;"><i class="ph ph-envelope"></i></div>
+                            <div class="item-content">
+                                <div class="item-title" style="font-size: 13px;">Boletín Semanal</div>
+                                <div class="item-desc" style="font-size: 11px;">Hace 3 días</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-kids">
+        <div class="view-header flex-between" style="background: linear-gradient(135deg, #FFEDD5, #FEF3C7); padding: 24px; border-radius: 16px; margin-bottom: 32px;">
+            <div>
+                <h2 class="view-title" style="color: #D97706; display: flex; align-items: center; gap: 12px;">
+                    <i class="ph ph-star-four" style="font-size: 32px;"></i> Shabat Infantil
+                </h2>
+                <p class="view-subtitle" style="color: #92400E; font-size: 16px;">Material semanal para que los más pequeños aprendan y se diviertan.</p>
+            </div>
+            <button class="btn-primary" style="background: #F59E0B; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                <i class="ph ph-paper-plane-tilt"></i> Enviar a Familias
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card col-span-2">
+                <div class="card-header" style="background: var(--bg-surface);">
+                    <h3>Parashá de la Semana: <span class="text-accent" style="font-family: 'Playfair Display', serif; font-size: 22px;">Noaj</span></h3>
+                </div>
+                <div class="card-body" style="padding: 24px;">
+                    <div style="display: flex; gap: 24px;">
+                        <div style="flex: 1;">
+                            <h4 style="font-size: 18px; margin-bottom: 12px; color: var(--text-main);">Resumen para Niños</h4>
+                            <p style="color: var(--text-muted); margin-bottom: 16px; line-height: 1.6;">
+                                Esta semana leemos sobre Noaj (Noé). Dios le pide a Noaj que construya una gran caja de madera llamada "Arca" porque iba a llover muchísimo. Noaj invitó a dos animalitos de cada especie para que subieran al arca y estuvieran a salvo. ¡Imagina estar en un barco lleno de perros, gatos, leones y elefantes!
+                            </p>
+                            
+                            <h4 style="font-size: 18px; margin-bottom: 12px; margin-top: 24px; color: var(--info);">Preguntas para conversar en familia <i class="ph ph-chats"></i></h4>
+                            <ul style="padding-left: 20px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                                <li>¿Cuál animal te hubiera gustado cuidar dentro del arca?</li>
+                                <li>¿Cómo crees que se sentía estar lloviendo por 40 días seguidos?</li>
+                                <li>¿Qué señal nos dio Dios al final para prometer que no habría otro diluvio? (¡Pista: tiene muchos colores!)</li>
+                            </ul>
+                        </div>
+                        <div style="width: 300px; display: flex; flex-direction: column; gap: 16px;">
+                            <div class="img-preview" style="border-radius: 12px; overflow: hidden; border: 4px solid white; box-shadow: var(--shadow-md);">
+                                <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_illustration_1778526484502.png" alt="Ilustración de Noaj" style="width: 100%; height: auto; display: block;">
+                            </div>
+                            <button class="btn-primary" style="width: 100%; justify-content: center; background: white; color: var(--primary); border: 1px solid var(--border-color);"><i class="ph ph-download-simple"></i> Descargar Imagen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Actividad de la Semana</h3>
+                </div>
+                <div class="card-body" style="padding: 24px; text-align: center;">
+                    <div style="background: #F3F4F6; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                        <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_coloring_page_1778526498591.png" alt="Página para colorear" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                    </div>
+                    <h4 style="margin-bottom: 8px;">¡Colorea el Arca!</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
+                    <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>
