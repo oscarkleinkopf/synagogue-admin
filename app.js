@@ -1293,28 +1293,45 @@ function initKids() {
   const questionsEl = document.getElementById('kids-parasha-questions');
   const activityEl  = document.getElementById('kids-parasha-activity');
   const sendBtn     = document.getElementById('btn-send-kids');
+  const selectEl    = document.getElementById('kids-parasha-select');
+
+  const keys = Object.keys(PARASHOT_DATA);
+  if (selectEl) {
+    selectEl.innerHTML = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+  }
 
   // Default fallback
   let matchedKey = 'Noach';
+  let actualParashaName = '';
 
   HebrewCalendar.getParasha().then(parasha => {
     if (parasha) {
-      // Try to match parasha name against our keys
       const parashaName = parasha.title;
-      const keys = Object.keys(PARASHOT_DATA);
+      actualParashaName = parashaName;
       const found = keys.find(k => parashaName.toLowerCase().includes(k.toLowerCase()));
       if (found) matchedKey = found;
-
-      if (nameEl) nameEl.textContent = `Parashat ${parashaName}`;
-    } else {
-      if (nameEl) nameEl.textContent = `Parashat ${matchedKey}`;
     }
-
-    renderKidsContent(matchedKey, summaryEl, questionsEl, activityEl);
+    
+    if (selectEl) selectEl.value = matchedKey;
+    updateKidsView(matchedKey, actualParashaName);
   }).catch(() => {
-    if (nameEl) nameEl.textContent = `Parashat ${matchedKey}`;
-    renderKidsContent(matchedKey, summaryEl, questionsEl, activityEl);
+    if (selectEl) selectEl.value = matchedKey;
+    updateKidsView(matchedKey, '');
   });
+
+  if (selectEl) {
+    selectEl.addEventListener('change', (e) => {
+      updateKidsView(e.target.value, actualParashaName);
+    });
+  }
+
+  function updateKidsView(key, activeName) {
+    renderKidsContent(key, summaryEl, questionsEl, activityEl);
+    if (nameEl) {
+      const isActive = activeName && activeName.toLowerCase().includes(key.toLowerCase());
+      nameEl.innerHTML = `${escapeHtml(key)} ${isActive ? '<span style="font-size:14px;background:var(--success-bg);color:var(--success);padding:4px 8px;border-radius:10px;margin-left:8px;font-weight:600;font-family:\'Inter\',sans-serif;">Esta Semana</span>' : '<span style="font-size:14px;background:var(--info-bg);color:var(--info);padding:4px 8px;border-radius:10px;margin-left:8px;font-weight:600;font-family:\'Inter\',sans-serif;">Explorando</span>'}`;
+    }
+  }
 
   if (sendBtn) {
     sendBtn.addEventListener('click', () => {
