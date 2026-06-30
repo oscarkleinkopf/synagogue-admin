@@ -170,66 +170,9 @@ const HebrewCalendar = {
 
 
 // ------------------------------------------------------------
-// 3. Parashot Kids Data (Spanish)
+// 3. Parashot Kids Data (Spanish) — Loaded from parashot.js
 // ------------------------------------------------------------
-const PARASHOT_DATA = {
-  'Bereshit': {
-    summary_kids: 'Esta semana leemos sobre cómo Dios creó todo el mundo en seis días. Primero hizo la luz, luego el cielo, los mares, los árboles, los animales y finalmente a Adán y Javá. ¡El séptimo día descansó y eso es Shabat!',
-    questions: ['¿Qué fue lo primero que Dios creó?', '¿Por qué crees que Dios descansó el séptimo día?', 'Si pudieras crear un animal nuevo, ¿cómo sería?'],
-    activity: '¡Dibuja tu propio Jardín del Edén con todos los animales que quieras!',
-    illustration: 'images/bereshit_illustration.jpg',
-    coloring: 'images/bereshit_coloring.jpg'
-  },
-  'Noach': {
-    summary_kids: 'Dios le pide a Noaj que construya un arca enorme porque va a llover muchísimo. Noaj invitó a dos animalitos de cada especie para que estuvieran a salvo. Después del diluvio, Dios puso un arcoíris en el cielo como promesa.',
-    questions: ['¿Cuál animal te hubiera gustado cuidar dentro del arca?', '¿Cómo crees que se sentía estar lloviendo por 40 días seguidos?', '¿Qué significa el arcoíris para ti?'],
-    activity: '¡Colorea el Arca de Noaj y todos sus animales!',
-    illustration: 'images/parasha_illustration.png',
-    coloring: 'images/parasha_coloring_page.png'
-  },
-  'Lech Lecha': {
-    summary_kids: 'Dios le dice a Abraham: "Lech Lechá" que significa "Ve por ti". Abraham dejó su casa y viajó a una tierra nueva que Dios le prometió. Fue muy valiente porque no sabía a dónde iba.',
-    questions: ['¿Alguna vez te mudaste a un lugar nuevo? ¿Cómo te sentiste?', '¿Qué llevarías en tu maleta si tuvieras que irte lejos?', '¿Por qué crees que Abraham confió en Dios?'],
-    activity: '¡Dibuja el mapa del viaje de Abraham!',
-    illustration: 'images/lech_lecha_illustration.jpg',
-    coloring: 'images/lech_lecha_coloring.jpg'
-  },
-  'Vayera': {
-    summary_kids: 'Abraham recibe tres visitantes misteriosos en su tienda. Les da comida y agua porque era muy hospitalario. Los visitantes le dan una gran noticia: ¡Sara va a tener un bebé!',
-    questions: ['¿Cómo recibes tú a los invitados en tu casa?', '¿Por qué es importante ser amable con los visitantes?', '¿Qué comida le prepararías a un invitado especial?'],
-    activity: '¡Prepara una tarjeta de bienvenida para un invitado!',
-    illustration: 'images/vayera_illustration.jpg',
-    coloring: 'images/vayera_coloring.jpg'
-  },
-  'Toldot': {
-    summary_kids: 'Esta semana conocemos a los gemelos Esav y Yaakov. Eran muy diferentes: Esav era cazador y peludo, y Yaakov era tranquilo y le gustaba estudiar. A veces los hermanos son muy distintos ¡y eso está bien!',
-    questions: ['¿En qué te pareces a tus hermanos o amigos?', '¿En qué eres diferente?', '¿Qué es lo especial de ser único?'],
-    activity: '¡Dibuja a dos gemelos que sean totalmente diferentes!',
-    illustration: 'images/toldot_illustration.jpg',
-    coloring: 'images/toldot_coloring.jpg'
-  },
-  'Vayetze': {
-    summary_kids: 'Yaakov tiene un sueño increíble: ve una escalera gigante que llega hasta el cielo con ángeles subiendo y bajando. Dios le promete que lo cuidará siempre.',
-    questions: ['¿Alguna vez tuviste un sueño muy especial?', '¿Cómo te imaginas una escalera al cielo?', '¿Qué le preguntarías a un ángel?'],
-    activity: '¡Dibuja la escalera de Yaakov con ángeles!',
-    illustration: 'images/vayetze_illustration.jpg',
-    coloring: 'images/vayetze_coloring.jpg'
-  },
-  'Miketz': {
-    summary_kids: 'Yosef interpreta los sueños del Faraón: habrá 7 años de mucha comida y 7 años de hambre. Gracias a su sabiduría, Yosef se convierte en el segundo hombre más importante de Egipto.',
-    questions: ['¿Alguna vez ayudaste a alguien con un problema difícil?', '¿Por qué es bueno guardar comida para después?', '¿Qué harías si fueras el rey de Egipto?'],
-    activity: '¡Dibuja los sueños del Faraón!',
-    illustration: 'images/miketz_illustration.jpg',
-    coloring: 'images/miketz_coloring.jpg'
-  },
-  'Shemot': {
-    summary_kids: 'Nace Moshé (Moisés). Su mamá lo pone en una canasta en el río para salvarlo. La hija del Faraón lo encuentra y lo cría como un príncipe. Cuando crece, ve una zarza que arde pero no se quema.',
-    questions: ['¿Qué harías si encontraras un bebé en una canasta?', '¿Por qué crees que la zarza no se quemaba?', '¿Cómo te sentirías si Dios te hablara?'],
-    activity: '¡Dibuja la canasta de Moshé flotando en el río!',
-    illustration: 'images/shemot_illustration.jpg',
-    coloring: 'images/shemot_coloring.jpg'
-  }
-};
+
 
 
 // ------------------------------------------------------------
