@@ -219,8 +219,12 @@ function openModal(title, bodyHtml, onSubmit) {
     </div>
     <div class="modal-body">${bodyHtml}</div>
     <div class="modal-footer">
-      <button class="btn btn-secondary modal-cancel">Cancelar</button>
-      <button class="btn btn-primary modal-submit">Guardar</button>
+      ${onSubmit ? `
+        <button class="btn btn-secondary modal-cancel">Cancelar</button>
+        <button class="btn btn-primary modal-submit">Guardar</button>
+      ` : `
+        <button class="btn btn-primary modal-cancel">Cerrar</button>
+      `}
     </div>
   `;
 
@@ -234,9 +238,12 @@ function openModal(title, bodyHtml, onSubmit) {
   overlay.querySelector('.modal-close').addEventListener('click', closeModal);
   overlay.querySelector('.modal-cancel').addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
-  overlay.querySelector('.modal-submit').addEventListener('click', () => {
-    if (onSubmit) onSubmit();
-  });
+  
+  if (onSubmit) {
+    overlay.querySelector('.modal-submit').addEventListener('click', () => {
+      onSubmit();
+    });
+  }
 }
 
 function closeModal() {
@@ -313,6 +320,90 @@ function escapeHtml(str) {
 function getMonthName(monthIndex) {
   const names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   return names[monthIndex] || '';
+}// ------------------------------------------------------------
+// 7b. Notifications Center System
+// ------------------------------------------------------------
+function initNotifications() {
+  const btn = document.getElementById('notifications-btn');
+  const badge = document.getElementById('notifications-badge');
+  if (!btn || !badge) return;
+
+  const notifications = [];
+  const yahrzeits = DataStore.getYahrzeits();
+  const members = DataStore.getMembers();
+  
+  const upcomingYahrzeits = yahrzeits.filter(y => {
+    const diff = daysUntil(y.gregorianDate);
+    return diff >= 0 && diff <= 7;
+  });
+
+  upcomingYahrzeits.forEach(y => {
+    const sponsor = members.find(m => m.id === y.memberId);
+    const sponsorName = sponsor ? `${sponsor.name} ${sponsor.family}` : 'Miembro';
+    notifications.push({
+      id: `yahr_${y.id}`,
+      type: 'yahrzeit',
+      icon: 'ph-candle',
+      title: `Yahrzeit de ${escapeHtml(y.deceasedName)}`,
+      text: `Aniversario el ${formatDate(y.gregorianDate)} (${escapeHtml(y.relation)} de ${escapeHtml(sponsorName)}).`,
+      date: y.gregorianDate
+    });
+  });
+
+  const today = new Date();
+  if (today.getDay() === 5) {
+    notifications.push({
+      id: 'shabbat_today',
+      type: 'info',
+      icon: 'ph-flame',
+      title: '¡Hoy es Shabat!',
+      text: 'Recuerda encender las velas antes del atardecer. ¡Shabat Shalom!',
+      date: today.toISOString()
+    });
+  }
+
+  notifications.push({
+    id: 'welcome_note',
+    type: 'info',
+    icon: 'ph-info',
+    title: 'KehiláAdmin v2.2',
+    text: 'Se han integrado todas las 54 Parashot de la Torá y el módulo Shorashim de genealogía interactiva.',
+    date: new Date().toISOString()
+  });
+
+  const count = notifications.length;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  btn.addEventListener('click', () => {
+    let html = '';
+    if (notifications.length === 0) {
+      html = '<p style="color:var(--text-muted); text-align:center; padding:16px;">No tienes notificaciones pendientes.</p>';
+    } else {
+      html = `
+        <div style="display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; padding-right:4px;">
+          ${notifications.map(n => `
+            <div style="display:flex; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-surface);">
+              <div style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:rgba(212,175,55,0.1); color:var(--accent); flex-shrink:0;">
+                <i class="ph ${n.icon}" style="font-size:18px;"></i>
+              </div>
+              <div style="flex:1;">
+                <h4 style="font-size:14px; margin:0 0 4px 0; color:var(--text-main); font-weight:600;">${n.title}</h4>
+                <p style="font-size:13px; margin:0 0 6px 0; color:var(--text-muted); line-height:1.4;">${n.text}</p>
+                <span style="font-size:11px; color:var(--accent); font-weight:500;">${n.type === 'yahrzeit' ? 'Urgente' : 'Informativo'}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    openModal('Centro de Notificaciones', html, null);
+  });
 }
 
 
@@ -332,6 +423,7 @@ const viewContainer = document.getElementById('view-container');
 document.addEventListener('DOMContentLoaded', () => {
   DataStore.seedData();
   initTheme();
+  initNotifications();
 
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
