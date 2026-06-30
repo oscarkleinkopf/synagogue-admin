@@ -28,19 +28,21 @@ const DataStore = {
   markSeeded()    { this._set('seeded', true); },
 
   seedData() {
-    if (this.isSeeded()) return;
+    const existing = this.getMembers();
+    const needsReseed = existing.length > 0 && !existing[0].hasOwnProperty('spouseId');
+    if (this.isSeeded() && !needsReseed) return;
 
     const members = [
-      { id: generateId(), name: 'David Cohen',       family: 'Familia Cohen',       email: 'david.cohen@kehila.org',     phone: '+34 612-345-001', status: 'active',   joinDate: '2022-03-15', hasChildren: true  },
-      { id: generateId(), name: 'Raquel Levy',       family: 'Familia Levy',        email: 'raquel.levy@kehila.org',     phone: '+34 612-345-002', status: 'active',   joinDate: '2021-09-01', hasChildren: true  },
-      { id: generateId(), name: 'Moisés Rosenberg',  family: 'Familia Rosenberg',   email: 'moises.r@kehila.org',        phone: '+34 612-345-003', status: 'inactive', joinDate: '2020-01-10', hasChildren: false },
-      { id: generateId(), name: 'Rebeca Stern',      family: 'Familia Stern',        email: 'rebeca.stern@kehila.org',    phone: '+34 612-345-004', status: 'active',   joinDate: '2023-06-20', hasChildren: true  },
-      { id: generateId(), name: 'Aarón Kaplan',      family: 'Familia Kaplan',       email: 'aaron.kaplan@kehila.org',    phone: '+34 612-345-005', status: 'active',   joinDate: '2019-11-05', hasChildren: false },
-      { id: generateId(), name: 'Sara Mizrahi',      family: 'Familia Mizrahi',      email: 'sara.mizrahi@kehila.org',    phone: '+34 612-345-006', status: 'active',   joinDate: '2022-08-12', hasChildren: true  },
-      { id: generateId(), name: 'Daniel Goldstein',  family: 'Familia Goldstein',    email: 'daniel.g@kehila.org',        phone: '+34 612-345-007', status: 'active',   joinDate: '2021-04-03', hasChildren: true  },
-      { id: generateId(), name: 'Miriam Sch',        family: 'Familia Sch',          email: 'miriam.sch@kehila.org',      phone: '+34 612-345-008', status: 'inactive', joinDate: '2023-01-25', hasChildren: false },
-      { id: generateId(), name: 'Jacobo Weiss',      family: 'Familia Weiss',        email: 'jacobo.weiss@kehila.org',    phone: '+34 612-345-009', status: 'active',   joinDate: '2020-07-18', hasChildren: true  },
-      { id: generateId(), name: 'Esther Benaim',     family: 'Familia Benaim',       email: 'esther.benaim@kehila.org',   phone: '+34 612-345-010', status: 'active',   joinDate: '2024-02-14', hasChildren: false }
+      { id: 'm1', name: 'David Cohen',       family: 'Familia Cohen',       email: 'david.cohen@kehila.org',     phone: '+34 612-345-001', status: 'active',   joinDate: '2022-03-15', hasChildren: true, spouseId: 'm2', fatherId: 'm9', motherId: 'm6'  },
+      { id: 'm2', name: 'Raquel Levy',       family: 'Familia Levy',        email: 'raquel.levy@kehila.org',     phone: '+34 612-345-002', status: 'active',   joinDate: '2021-09-01', hasChildren: true, spouseId: 'm1'  },
+      { id: 'm3', name: 'Moisés Rosenberg',  family: 'Familia Rosenberg',   email: 'moises.r@kehila.org',        phone: '+34 612-345-003', status: 'inactive', joinDate: '2020-01-10', hasChildren: false },
+      { id: 'm4', name: 'Rebeca Stern',      family: 'Familia Stern',        email: 'rebeca.stern@kehila.org',    phone: '+34 612-345-004', status: 'active',   joinDate: '2023-06-20', hasChildren: true, fatherId: 'm1', motherId: 'm2'  },
+      { id: 'm5', name: 'Aarón Kaplan',      family: 'Familia Kaplan',       email: 'aaron.kaplan@kehila.org',    phone: '+34 612-345-005', status: 'active',   joinDate: '2019-11-05', hasChildren: false },
+      { id: 'm6', name: 'Sara Mizrahi',      family: 'Familia Mizrahi',      email: 'sara.mizrahi@kehila.org',    phone: '+34 612-345-006', status: 'active',   joinDate: '2022-08-12', hasChildren: true, spouseId: 'm9'  },
+      { id: 'm7', name: 'Daniel Goldstein',  family: 'Familia Goldstein',    email: 'daniel.g@kehila.org',        phone: '+34 612-345-007', status: 'active',   joinDate: '2021-04-03', hasChildren: true, fatherId: 'm1', motherId: 'm2'  },
+      { id: 'm8', name: 'Miriam Sch',        family: 'Familia Sch',          email: 'miriam.sch@kehila.org',      phone: '+34 612-345-008', status: 'inactive', joinDate: '2023-01-25', hasChildren: false },
+      { id: 'm9', name: 'Jacobo Weiss',      family: 'Familia Weiss',        email: 'jacobo.weiss@kehila.org',    phone: '+34 612-345-009', status: 'active',   joinDate: '2020-07-18', hasChildren: true, spouseId: 'm6'  },
+      { id: 'm10', name: 'Esther Benaim',     family: 'Familia Benaim',       email: 'esther.benaim@kehila.org',   phone: '+34 612-345-010', status: 'active',   joinDate: '2024-02-14', hasChildren: false }
     ];
     this.saveMembers(members);
 
@@ -415,7 +417,8 @@ function renderView(viewName) {
         calendar:        initCalendar,
         yahrzeits:       initYahrzeits,
         communications:  initCommunications,
-        kids:            initKids
+        kids:            initKids,
+        shorashim:       initShorashim
       };
 
       if (initializers[viewName]) initializers[viewName]();
@@ -657,6 +660,11 @@ function openMemberModal(memberId) {
   const existing = memberId ? members.find(m => m.id === memberId) : null;
   const title = existing ? 'Editar Miembro' : 'Nuevo Miembro';
 
+  const otherMembers = members.filter(m => m.id !== memberId);
+  const spouseOptions = '<option value="">Ninguno/a</option>' + otherMembers.map(m => `<option value="${m.id}" ${existing?.spouseId === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
+  const fatherOptions = '<option value="">Ninguno</option>' + otherMembers.map(m => `<option value="${m.id}" ${existing?.fatherId === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
+  const motherOptions = '<option value="">Ninguna</option>' + otherMembers.map(m => `<option value="${m.id}" ${existing?.motherId === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
+
   const bodyHtml = `
     <div class="form-grid">
       <div class="form-group">
@@ -675,6 +683,18 @@ function openMemberModal(memberId) {
         <label for="modal-member-phone">Teléfono</label>
         <input type="text" id="modal-member-phone" class="form-input" value="${escapeHtml(existing?.phone || '')}" placeholder="+34 612-345-678">
       </div>
+      <div class="form-group">
+        <label for="modal-member-spouse">Cónyuge</label>
+        <select id="modal-member-spouse" class="form-input">${spouseOptions}</select>
+      </div>
+      <div class="form-group">
+        <label for="modal-member-father">Padre</label>
+        <select id="modal-member-father" class="form-input">${fatherOptions}</select>
+      </div>
+      <div class="form-group">
+        <label for="modal-member-mother">Madre</label>
+        <select id="modal-member-mother" class="form-input">${motherOptions}</select>
+      </div>
       <div class="form-group form-group-full">
         <label class="checkbox-label">
           <input type="checkbox" id="modal-member-children" ${existing?.hasChildren ? 'checked' : ''}>
@@ -688,6 +708,9 @@ function openMemberModal(memberId) {
     const family  = document.getElementById('modal-member-family')?.value.trim();
     const email   = document.getElementById('modal-member-email')?.value.trim();
     const phone   = document.getElementById('modal-member-phone')?.value.trim();
+    const spouseId = document.getElementById('modal-member-spouse')?.value || '';
+    const fatherId = document.getElementById('modal-member-father')?.value || '';
+    const motherId = document.getElementById('modal-member-mother')?.value || '';
     const hasChildren = document.getElementById('modal-member-children')?.checked || false;
 
     if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
@@ -696,13 +719,36 @@ function openMemberModal(memberId) {
     if (existing) {
       const idx = all.findIndex(m => m.id === existing.id);
       if (idx !== -1) {
-        all[idx] = { ...all[idx], name, family, email, phone, hasChildren };
+        all[idx] = { ...all[idx], name, family, email, phone, hasChildren, spouseId, fatherId, motherId };
+        
+        // Bidirectional spouse linking helper
+        if (spouseId) {
+          all.forEach(m => {
+            if (m.id === spouseId) m.spouseId = existing.id;
+            else if (m.spouseId === existing.id && m.id !== spouseId) m.spouseId = '';
+          });
+        } else {
+          all.forEach(m => {
+            if (m.spouseId === existing.id) m.spouseId = '';
+          });
+        }
+
         DataStore.saveMembers(all);
         showToast('Miembro actualizado correctamente');
       }
     } else {
+      const newId = generateId();
+      
+      // Bidirectional spouse linking helper for new member
+      if (spouseId) {
+        all.forEach(m => {
+          if (m.id === spouseId) m.spouseId = newId;
+        });
+      }
+
       all.push({
-        id: generateId(), name, family, email, phone, hasChildren,
+        id: newId, name, family, email, phone, hasChildren,
+        spouseId, fatherId, motherId,
         status: 'active', joinDate: new Date().toISOString().split('T')[0]
       });
       DataStore.saveMembers(all);
@@ -1276,4 +1322,256 @@ function renderKidsContent(key, summaryEl, questionsEl, activityEl) {
   }
 
   if (activityEl) activityEl.textContent = data.activity;
+}
+
+
+// ------------------------------------------------------------
+// 9h. Shorashim (Raíces / Árbol Familiar)
+// ------------------------------------------------------------
+function initShorashim() {
+  const members = DataStore.getMembers();
+  const select = document.getElementById('shorashim-member-select');
+  if (!select) return;
+
+  // Populate select dropdown
+  select.innerHTML = members.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+
+  // Handle selection change
+  select.addEventListener('change', (e) => {
+    renderShorashimTree(e.target.value);
+  });
+
+  // Export GEDCOM button
+  const exportBtn = document.getElementById('btn-export-gedcom');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      exportMemberGedcom(select.value);
+    });
+  }
+
+  // Initial render with first member
+  if (members.length > 0) {
+    select.value = members[0].id;
+    renderShorashimTree(members[0].id);
+  }
+}
+
+function renderShorashimTree(memberId) {
+  const members = DataStore.getMembers();
+  const focusMember = members.find(m => m.id === memberId);
+  if (!focusMember) return;
+
+  // Find relatives
+  const spouse = focusMember.spouseId ? members.find(m => m.id === focusMember.spouseId) : null;
+  const father = focusMember.fatherId ? members.find(m => m.id === focusMember.fatherId) : null;
+  const mother = focusMember.motherId ? members.find(m => m.id === focusMember.motherId) : null;
+  const children = members.filter(m => m.fatherId === memberId || m.motherId === memberId);
+
+  // Helper to render a node
+  const renderNodeHtml = (member, label, placeholder) => {
+    if (!member) {
+      return `
+        <div class="tree-node empty" style="border: 2px dashed var(--border-color); border-radius:12px; padding:16px; min-width:180px; text-align:center; color:var(--text-muted); font-size:13px; background:var(--bg-main);">
+          <div>${placeholder}</div>
+          <div style="font-size:11px; margin-top:4px;">Sin registrar</div>
+        </div>`;
+    }
+    const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return `
+      <div class="tree-node" style="border: 1px solid var(--border-color); border-radius:12px; padding:16px; min-width:180px; text-align:center; background:var(--bg-surface); box-shadow:var(--shadow-sm); position:relative;">
+        <span style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--primary); color:white; font-size:9px; padding:2px 8px; border-radius:10px; font-weight:600; text-transform:uppercase;">${label}</span>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:4px;">
+          <div class="member-avatar" style="width:32px; height:32px; font-size:12px;">${initials}</div>
+          <div style="font-weight:600; font-size:13px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">${escapeHtml(member.name)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(member.family)}</div>
+          <button class="btn-link" style="font-size:11px; padding:0; margin-top:4px;" onclick="shorashimFocus('${member.id}')">Hacer Foco</button>
+        </div>
+      </div>`;
+  };
+
+  // Render Focus node (highlighted)
+  const initialsFocus = focusMember.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const focusNodeHtml = `
+    <div class="tree-node focus-node" style="border: 2px solid var(--accent); border-radius:12px; padding:20px; min-width:200px; text-align:center; background:var(--bg-surface); box-shadow:var(--shadow-md); position:relative;">
+      <span style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--accent); color:var(--sidebar-bg); font-size:10px; padding:2px 10px; border-radius:10px; font-weight:700; text-transform:uppercase;">Miembro Foco</span>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:4px;">
+        <div class="member-avatar" style="width:40px; height:40px; font-size:14px; background:linear-gradient(135deg, var(--accent), var(--accent-hover)); color:var(--sidebar-bg); font-weight:700;">${initialsFocus}</div>
+        <div style="font-weight:700; font-size:14px; color:var(--primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${escapeHtml(focusMember.name)}</div>
+        <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(focusMember.family)}</div>
+      </div>
+    </div>`;
+
+  // Inject parents
+  const fatherEl = document.getElementById('node-father');
+  const motherEl = document.getElementById('node-mother');
+  if (fatherEl) fatherEl.innerHTML = renderNodeHtml(father, 'Padre', 'Agregar Padre');
+  if (motherEl) motherEl.innerHTML = renderNodeHtml(mother, 'Madre', 'Agregar Madre');
+
+  // Inject focus & spouse
+  const focusEl = document.getElementById('node-focus');
+  const spouseEl = document.getElementById('node-spouse');
+  if (focusEl) focusEl.innerHTML = focusNodeHtml;
+  if (spouseEl) spouseEl.innerHTML = renderNodeHtml(spouse, 'Cónyuge', 'Agregar Cónyuge');
+
+  // Show relation link or hide if no spouse
+  const relationLink = document.getElementById('tree-relation-link');
+  if (relationLink) {
+    relationLink.style.display = spouse ? 'block' : 'none';
+  }
+  if (spouseEl) {
+    spouseEl.style.display = spouse ? 'block' : 'none';
+  }
+
+  // Inject children
+  const childrenEl = document.getElementById('nodes-children');
+  if (childrenEl) {
+    if (children.length === 0) {
+      childrenEl.innerHTML = `
+        <div class="tree-node empty" style="border: 2px dashed var(--border-color); border-radius:12px; padding:16px; min-width:180px; text-align:center; color:var(--text-muted); font-size:13px; background:var(--bg-main);">
+          <div>Hijos</div>
+          <div style="font-size:11px; margin-top:4px;">Sin hijos registrados</div>
+        </div>`;
+    } else {
+      childrenEl.innerHTML = children.map(c => renderNodeHtml(c, 'Hijo/a', '')).join('');
+    }
+  }
+
+  // Update Genealogy Links
+  const linkMyHeritage = document.getElementById('link-myheritage');
+  const linkGeni = document.getElementById('link-geni');
+  const linkFamilySearch = document.getElementById('link-familysearch');
+
+  const names = focusMember.name.split(' ');
+  const firstName = names[0] || '';
+  const lastName = names.slice(1).join(' ') || '';
+
+  if (linkMyHeritage) linkMyHeritage.href = `https://www.myheritage.es/research?action=query&formId=1&qname=Name+FN.${encodeURIComponent(firstName)}+LN.${encodeURIComponent(lastName)}`;
+  if (linkGeni) linkGeni.href = `https://www.geni.com/search?query=${encodeURIComponent(focusMember.name)}`;
+  if (linkFamilySearch) linkFamilySearch.href = `https://www.familysearch.org/search/record/results?q.givenName=${encodeURIComponent(firstName)}&q.surname=${encodeURIComponent(lastName)}`;
+}
+
+// Global click handler to change tree focus
+window.shorashimFocus = function(memberId) {
+  const select = document.getElementById('shorashim-member-select');
+  if (select) {
+    select.value = memberId;
+    renderShorashimTree(memberId);
+  }
+};
+
+function exportMemberGedcom(memberId) {
+  const members = DataStore.getMembers();
+  const focusMember = members.find(m => m.id === memberId);
+  if (!focusMember) return;
+
+  const relatedIds = new Set([focusMember.id]);
+  if (focusMember.spouseId) relatedIds.add(focusMember.spouseId);
+  if (focusMember.fatherId) relatedIds.add(focusMember.fatherId);
+  if (focusMember.motherId) relatedIds.add(focusMember.motherId);
+  
+  members.forEach(m => {
+    if (m.fatherId === focusMember.id || m.motherId === focusMember.id) {
+      relatedIds.add(m.id);
+    }
+  });
+
+  const relatedMembers = members.filter(m => relatedIds.has(m.id));
+
+  let ged = [];
+  ged.push('0 HEAD');
+  ged.push('1 CHAR UTF-8');
+  ged.push('1 SOUR KehilaAdmin');
+  ged.push('2 VERS 2.0');
+  ged.push('1 GEDC');
+  ged.push('2 VERS 5.5.1');
+  ged.push('2 FORM LINEAGE-LINKED');
+
+  relatedMembers.forEach(m => {
+    const names = m.name.split(' ');
+    const first = names[0] || '';
+    const last = names.slice(1).join(' ') || '';
+    
+    ged.push(`0 @I${m.id}@ INDI`);
+    ged.push(`1 NAME ${first} /${last}/`);
+    ged.push(`2 GIVN ${first}`);
+    ged.push(`2 SURN ${last}`);
+    
+    if (m.email) ged.push(`1 EMAIL ${m.email}`);
+    if (m.phone) ged.push(`1 PHON ${m.phone}`);
+    
+    if (m.fatherId || m.motherId) {
+      const famcId = m.fatherId && m.motherId 
+        ? `F_${m.fatherId}_${m.motherId}`
+        : m.fatherId ? `F_${m.fatherId}_X` : `F_X_${m.motherId}`;
+      ged.push(`1 FAMC @${famcId}@`);
+    }
+    if (m.spouseId) {
+      const famsId = m.id < m.spouseId ? `F_${m.id}_${m.spouseId}` : `F_${m.spouseId}_${m.id}`;
+      ged.push(`1 FAMS @${famsId}@`);
+    }
+  });
+
+  const families = new Set();
+  
+  relatedMembers.forEach(m => {
+    if (m.spouseId) {
+      const famId = m.id < m.spouseId ? `F_${m.id}_${m.spouseId}` : `F_${m.spouseId}_${m.id}`;
+      if (!families.has(famId)) {
+        families.add(famId);
+        const husband = m.id < m.spouseId ? m : members.find(x => x.id === m.spouseId);
+        const wife = m.id < m.spouseId ? members.find(x => x.id === m.spouseId) : m;
+        
+        ged.push(`0 @${famId}@ FAM`);
+        if (husband) ged.push(`1 HUSB @I${husband.id}@`);
+        if (wife) ged.push(`1 WIFE @I${wife.id}@`);
+        
+        const coupleChildren = members.filter(c => 
+          (c.fatherId === husband?.id && c.motherId === wife?.id) ||
+          (husband && c.fatherId === husband.id && !c.motherId) ||
+          (wife && c.motherId === wife.id && !c.fatherId)
+        );
+        coupleChildren.forEach(c => {
+          ged.push(`1 CHIL @I${c.id}@`);
+        });
+      }
+    }
+  });
+
+  if (focusMember.fatherId || focusMember.motherId) {
+    const famId = focusMember.fatherId && focusMember.motherId 
+      ? `F_${focusMember.fatherId}_${focusMember.motherId}`
+      : focusMember.fatherId ? `F_${focusMember.fatherId}_X` : `F_X_${focusMember.motherId}`;
+    
+    if (!families.has(famId)) {
+      families.add(famId);
+      ged.push(`0 @${famId}@ FAM`);
+      if (focusMember.fatherId) ged.push(`1 HUSB @I${focusMember.fatherId}@`);
+      if (focusMember.motherId) ged.push(`1 WIFE @I${focusMember.motherId}@`);
+      ged.push(`1 CHIL @I${focusMember.id}@`);
+      
+      members.forEach(m => {
+        if (m.id !== focusMember.id) {
+          const matchesFather = focusMember.fatherId && m.fatherId === focusMember.fatherId;
+          const matchesMother = focusMember.motherId && m.motherId === focusMember.motherId;
+          if (matchesFather || matchesMother) {
+            ged.push(`1 CHIL @I${m.id}@`);
+          }
+        }
+      });
+    }
+  }
+
+  ged.push('0 TRLR');
+  
+  const content = ged.join('\n');
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `arbol_shorashim_${focusMember.name.toLowerCase().replace(/\s+/g, '_')}.ged`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Archivo GEDCOM exportado');
 }

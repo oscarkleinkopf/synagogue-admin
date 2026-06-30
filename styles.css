@@ -1194,3 +1194,43 @@ html[data-theme='dark'] h6 {
     from { opacity: 0; transform: translateX(100px); }
     to { opacity: 1; transform: translateX(0); }
 }
+
+/* ============================================================
+   SHORASHIM ( Raíces / Árbol Familiar )
+   ============================================================ */
+.tree-visualizer {
+    padding: 20px 0;
+}
+.tree-node-wrapper {
+    transition: all var(--transition-normal);
+    z-index: 2;
+}
+.tree-node {
+    transition: all var(--transition-fast);
+}
+.tree-node:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md) !important;
+}
+.tree-node.focus-node:hover {
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2) !important;
+}
+.tree-row {
+    position: relative;
+    z-index: 2;
+}
+.tree-visualizer::before {
+    content: '';
+    position: absolute;
+    top: 50px;
+    bottom: 50px;
+    left: 50%;
+    width: 2px;
+    background: var(--border-color);
+    z-index: 1;
+    transform: translateX(-50%);
+}
+
+[data-theme='dark'] .tree-node.empty {
+    background: #1f242c !important;
+}

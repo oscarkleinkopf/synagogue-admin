@@ -42,6 +42,10 @@
                     <i class="ph ph-candle"></i>
                     <span>Yahrzeits</span>
                 </a>
+                <a href="#" class="nav-item" data-view="shorashim">
+                    <i class="ph ph-tree-structure"></i>
+                    <span>Shorashim</span>
+                </a>
                 <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
                 <a href="#" class="nav-item" data-view="communications">
                     <i class="ph ph-envelope-simple"></i>
@@ -339,6 +343,114 @@
                     <h4 id="kids-activity-title" style="margin-bottom:8px">¡Colorea!</h4>
                     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
                     <button class="btn-primary" style="width:100%;justify-content:center" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-shorashim">
+        <div class="view-header flex-between">
+            <div>
+                <h2 class="view-title">Shorashim (Raíces)</h2>
+                <p class="view-subtitle">Árbol familiar comunitario y enlaces de genealogía</p>
+            </div>
+            <div style="display:flex;gap:12px">
+                <button class="btn-primary" id="btn-export-gedcom"><i class="ph ph-download-simple"></i> Exportar GEDCOM (.ged)</button>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 24px; margin-bottom: 24px;">
+            <div class="form-group" style="display:flex; align-items:center; gap:16px; margin-bottom:0;">
+                <label style="font-weight: 600; font-size: 15px; color: var(--text-main); margin-bottom:0; white-space:nowrap;">Seleccionar Miembro:</label>
+                <select class="select-input" id="shorashim-member-select" style="min-width: 250px;">
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; gap: 24px;">
+            <!-- Tree Display Card -->
+            <div class="card" style="padding: 24px; display: flex; flex-direction: column; justify-content: center; min-height: 400px; background: radial-gradient(circle at center, rgba(212, 175, 55, 0.02) 0%, transparent 70%), var(--bg-surface);">
+                <div class="card-header" style="border:none; padding:0 0 20px 0; margin-bottom: 20px;">
+                    <h3>Relaciones Familiares</h3>
+                </div>
+                
+                <div class="tree-visualizer" style="display:flex; flex-direction:column; align-items:center; gap:32px; width:100%; position:relative;">
+                    
+                    <!-- Parents Row -->
+                    <div class="tree-row" style="display:flex; gap:64px; justify-content:center; position:relative; width:100%;">
+                        <!-- Father -->
+                        <div class="tree-node-wrapper" id="node-father">
+                            <!-- Populated by JS -->
+                        </div>
+                        <!-- Mother -->
+                        <div class="tree-node-wrapper" id="node-mother">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Focus & Spouse Row -->
+                    <div class="tree-row" style="display:flex; gap:64px; justify-content:center; align-items:center; position:relative; width:100%;">
+                        <!-- Focus Member -->
+                        <div class="tree-node-wrapper focus-node" id="node-focus">
+                            <!-- Populated by JS -->
+                        </div>
+                        
+                        <!-- Link Indicator -->
+                        <div id="tree-relation-link" style="font-size:24px; color:var(--accent);"><i class="ph ph-infinity"></i></div>
+
+                        <!-- Spouse -->
+                        <div class="tree-node-wrapper" id="node-spouse">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Children Row -->
+                    <div class="tree-row" style="display:flex; gap:32px; justify-content:center; flex-wrap:wrap; position:relative; width:100%;">
+                        <!-- Children Nodes (Populated by JS) -->
+                        <div id="nodes-children" style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; width:100%;"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Genealogy Tools Card -->
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <div class="card" style="padding: 24px;">
+                    <div class="card-header" style="border:none; padding:0 0 16px 0; margin-bottom:16px;">
+                        <h3>Búsqueda Genealógica</h3>
+                    </div>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
+                        Investiga el linaje y las raíces (*Shorashim*) de este miembro en las bases de datos genealógicas más importantes.
+                    </p>
+                    <div class="genealogy-links" style="display:flex; flex-direction:column; gap:12px;">
+                        <a href="#" target="_blank" id="link-myheritage" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
+                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-tree" style="color:#FF7F50;"></i> Buscar en MyHeritage</span>
+                            <i class="ph ph-arrow-square-out"></i>
+                        </a>
+                        <a href="#" target="_blank" id="link-geni" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
+                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-git-merge" style="color:#00BFFF;"></i> Buscar en Geni</span>
+                            <i class="ph ph-arrow-square-out"></i>
+                        </a>
+                        <a href="#" target="_blank" id="link-familysearch" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
+                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-bookmarks" style="color:#8FBC8F;"></i> Buscar en FamilySearch</span>
+                            <i class="ph ph-arrow-square-out"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 24px;">
+                    <div class="card-header" style="border:none; padding:0 0 16px 0; margin-bottom:16px;">
+                        <h3>Proyecto Shorashim</h3>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; display:flex; flex-direction:column; gap:12px;">
+                        <p>
+                            El archivo GEDCOM (.ged) es el estándar universal para árboles familiares. Al exportarlo, podrás subirlo directamente a MyHeritage, Geni o Ancestry para no tener que reescribir los datos de la comunidad.
+                        </p>
+                        <p style="background:var(--bg-main); padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:500;">
+                            💡 Las relaciones familiares se configuran editando el perfil del miembro en el directorio de Miembros.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
