@@ -1,169 +1,1279 @@
-// Mock Data
-const mockYahrzeits = [
-    { name: "Isaac Cohen", relation: "Padre de David Cohen", date: "15 Mayo 2026", days: 4, type: "primary" },
-    { name: "Sarah Levy", relation: "Madre de Raquel Levy", date: "18 Mayo 2026", days: 7, type: "warning" },
-    { name: "Abraham Goldstein", relation: "Abuelo de J. Goldstein", date: "22 Mayo 2026", days: 11, type: "neutral" }
-];
+// ============================================================
+// KehilaAdmin — Full Application Logic
+// ============================================================
 
-const mockServices = [
-    { title: "Kabbalat Shabbat", time: "Viernes, 19:30 hrs", location: "Santuario Principal", tag: "Shabbat" },
-    { title: "Shacharit", time: "Sábado, 09:00 hrs", location: "Santuario Principal", tag: "Shabbat" },
-    { title: "Clase de Torá", time: "Martes, 20:00 hrs", location: "Biblioteca", tag: "Estudio" }
-];
+// ------------------------------------------------------------
+// 1. DataStore — localStorage Persistence Layer
+// ------------------------------------------------------------
+const DataStore = {
+  _get(key) { return JSON.parse(localStorage.getItem('kehila_' + key) || 'null'); },
+  _set(key, val) { localStorage.setItem('kehila_' + key, JSON.stringify(val)); },
 
-const mockMembers = [
-    { id: 1, name: "David Cohen", family: "Familia Cohen", email: "david.cohen@email.com", phone: "+1 555-0101", status: "active" },
-    { id: 2, name: "Raquel Levy", family: "Familia Levy", email: "raquel.l@email.com", phone: "+1 555-0102", status: "active" },
-    { id: 3, name: "Moisés Rosenberg", family: "Familia Rosenberg", email: "moises@email.com", phone: "+1 555-0103", status: "inactive" },
-    { id: 4, name: "Rebeca Stern", family: "Familia Stern", email: "r.stern@email.com", phone: "+1 555-0104", status: "active" },
-    { id: 5, name: "Aarón Kaplan", family: "Familia Kaplan", email: "aaron.k@email.com", phone: "+1 555-0105", status: "active" }
-];
+  getMembers()    { return this._get('members')   || []; },
+  saveMembers(m)  { this._set('members', m); },
 
-// App State
-const state = {
-    currentView: 'dashboard'
+  getDonations()  { return this._get('donations') || []; },
+  saveDonations(d){ this._set('donations', d); },
+
+  getYahrzeits()  { return this._get('yahrzeits') || []; },
+  saveYahrzeits(y){ this._set('yahrzeits', y); },
+
+  getMessages()   { return this._get('messages')  || []; },
+  saveMessages(m) { this._set('messages', m); },
+
+  getTheme()      { return this._get('theme') || 'light'; },
+  saveTheme(t)    { this._set('theme', t); },
+
+  isSeeded()      { return this._get('seeded') === true; },
+  markSeeded()    { this._set('seeded', true); },
+
+  seedData() {
+    if (this.isSeeded()) return;
+
+    const members = [
+      { id: generateId(), name: 'David Cohen',       family: 'Familia Cohen',       email: 'david.cohen@kehila.org',     phone: '+34 612-345-001', status: 'active',   joinDate: '2022-03-15', hasChildren: true  },
+      { id: generateId(), name: 'Raquel Levy',       family: 'Familia Levy',        email: 'raquel.levy@kehila.org',     phone: '+34 612-345-002', status: 'active',   joinDate: '2021-09-01', hasChildren: true  },
+      { id: generateId(), name: 'Moisés Rosenberg',  family: 'Familia Rosenberg',   email: 'moises.r@kehila.org',        phone: '+34 612-345-003', status: 'inactive', joinDate: '2020-01-10', hasChildren: false },
+      { id: generateId(), name: 'Rebeca Stern',      family: 'Familia Stern',        email: 'rebeca.stern@kehila.org',    phone: '+34 612-345-004', status: 'active',   joinDate: '2023-06-20', hasChildren: true  },
+      { id: generateId(), name: 'Aarón Kaplan',      family: 'Familia Kaplan',       email: 'aaron.kaplan@kehila.org',    phone: '+34 612-345-005', status: 'active',   joinDate: '2019-11-05', hasChildren: false },
+      { id: generateId(), name: 'Sara Mizrahi',      family: 'Familia Mizrahi',      email: 'sara.mizrahi@kehila.org',    phone: '+34 612-345-006', status: 'active',   joinDate: '2022-08-12', hasChildren: true  },
+      { id: generateId(), name: 'Daniel Goldstein',  family: 'Familia Goldstein',    email: 'daniel.g@kehila.org',        phone: '+34 612-345-007', status: 'active',   joinDate: '2021-04-03', hasChildren: true  },
+      { id: generateId(), name: 'Miriam Sch',        family: 'Familia Sch',          email: 'miriam.sch@kehila.org',      phone: '+34 612-345-008', status: 'inactive', joinDate: '2023-01-25', hasChildren: false },
+      { id: generateId(), name: 'Jacobo Weiss',      family: 'Familia Weiss',        email: 'jacobo.weiss@kehila.org',    phone: '+34 612-345-009', status: 'active',   joinDate: '2020-07-18', hasChildren: true  },
+      { id: generateId(), name: 'Esther Benaim',     family: 'Familia Benaim',       email: 'esther.benaim@kehila.org',   phone: '+34 612-345-010', status: 'active',   joinDate: '2024-02-14', hasChildren: false }
+    ];
+    this.saveMembers(members);
+
+    const donationTypes = ['Donación', 'Cuota Mensual', 'Promesa', 'Kiddush'];
+    const donations = [
+      { id: generateId(), memberId: members[0].id, memberName: 'David Cohen',       amount: 500,   type: 'Donación',      date: '2026-01-10', notes: 'Donación de Januká'      },
+      { id: generateId(), memberId: members[1].id, memberName: 'Raquel Levy',       amount: 150,   type: 'Cuota Mensual', date: '2026-01-15', notes: ''                         },
+      { id: generateId(), memberId: members[3].id, memberName: 'Rebeca Stern',      amount: 200,   type: 'Kiddush',       date: '2026-01-22', notes: 'Kiddush en honor de Bat Mitzvá' },
+      { id: generateId(), memberId: members[4].id, memberName: 'Aarón Kaplan',      amount: 150,   type: 'Cuota Mensual', date: '2026-02-05', notes: ''                         },
+      { id: generateId(), memberId: members[6].id, memberName: 'Daniel Goldstein',  amount: 1000,  type: 'Promesa',       date: '2026-02-14', notes: 'Promesa anual'             },
+      { id: generateId(), memberId: members[5].id, memberName: 'Sara Mizrahi',      amount: 150,   type: 'Cuota Mensual', date: '2026-02-20', notes: ''                         },
+      { id: generateId(), memberId: members[0].id, memberName: 'David Cohen',       amount: 300,   type: 'Donación',      date: '2026-03-08', notes: 'Purim'                    },
+      { id: generateId(), memberId: members[8].id, memberName: 'Jacobo Weiss',      amount: 150,   type: 'Cuota Mensual', date: '2026-03-15', notes: ''                         },
+      { id: generateId(), memberId: members[9].id, memberName: 'Esther Benaim',     amount: 250,   type: 'Kiddush',       date: '2026-03-28', notes: 'Kiddush comunitario'       },
+      { id: generateId(), memberId: members[1].id, memberName: 'Raquel Levy',       amount: 150,   type: 'Cuota Mensual', date: '2026-04-10', notes: ''                         },
+      { id: generateId(), memberId: members[3].id, memberName: 'Rebeca Stern',      amount: 500,   type: 'Promesa',       date: '2026-04-20', notes: 'Promesa Pésaj'             },
+      { id: generateId(), memberId: members[6].id, memberName: 'Daniel Goldstein',  amount: 150,   type: 'Cuota Mensual', date: '2026-05-05', notes: ''                         },
+      { id: generateId(), memberId: members[5].id, memberName: 'Sara Mizrahi',      amount: 400,   type: 'Donación',      date: '2026-05-18', notes: 'Lag BaOmer'                },
+      { id: generateId(), memberId: members[4].id, memberName: 'Aarón Kaplan',      amount: 150,   type: 'Cuota Mensual', date: '2026-06-02', notes: ''                         },
+      { id: generateId(), memberId: members[0].id, memberName: 'David Cohen',       amount: 750,   type: 'Donación',      date: '2026-06-15', notes: 'Donación Shavuot'          }
+    ];
+    this.saveDonations(donations);
+
+    const yahrzeits = [
+      { id: generateId(), deceasedName: 'Isaac Cohen',      hebrewName: 'Yitzjak ben Avraham',   relation: 'Padre',  gregorianDate: '2026-07-12', memberId: members[0].id },
+      { id: generateId(), deceasedName: 'Sarah Levy',       hebrewName: 'Sarah bat Moshé',       relation: 'Madre',  gregorianDate: '2026-07-05', memberId: members[1].id },
+      { id: generateId(), deceasedName: 'Abraham Goldstein', hebrewName: 'Avraham ben Yaakov',    relation: 'Abuelo', gregorianDate: '2026-08-20', memberId: members[6].id },
+      { id: generateId(), deceasedName: 'Rivka Weiss',      hebrewName: 'Rivka bat Shmuel',      relation: 'Abuela', gregorianDate: '2026-07-01', memberId: members[8].id },
+      { id: generateId(), deceasedName: 'Salomón Benaim',   hebrewName: 'Shlomo ben David',      relation: 'Tío',    gregorianDate: '2026-09-15', memberId: members[9].id }
+    ];
+    this.saveYahrzeits(yahrzeits);
+
+    const messages = [
+      { id: generateId(), recipients: 'Todos los miembros', subject: 'Horarios de Shabat — Junio', body: 'Querida comunidad, les recordamos los horarios de Kabbalat Shabat para el mes de junio. Encendido de velas a las 19:45.', sentAt: '2026-06-01T10:30:00' },
+      { id: generateId(), recipients: 'Familias con niños',  subject: 'Campamento de Verano 2026', body: 'Nos complace anunciar el campamento de verano para niños de 6 a 12 años. Inscripciones abiertas hasta el 15 de julio.',    sentAt: '2026-06-10T14:00:00' }
+    ];
+    this.saveMessages(messages);
+
+    this.markSeeded();
+  }
 };
 
-// DOM Elements
-const viewContainer = document.getElementById('view-container');
-const navItems = document.querySelectorAll('.nav-item');
 
-// Initialization
+// ------------------------------------------------------------
+// 2. Hebcal API Integration
+// ------------------------------------------------------------
+const HebrewCalendar = {
+  _cache: null,
+  _cacheTime: 0,
+  CACHE_TTL: 24 * 60 * 60 * 1000,
+
+  async fetchData() {
+    if (this._cache && Date.now() - this._cacheTime < this.CACHE_TTL) return this._cache;
+    try {
+      const url = 'https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&year=now&month=x&ss=on&mf=on&c=on&geo=city&city=IL-Jerusalem&M=on&s=on&leyning=off';
+      const res = await fetch(url);
+      const data = await res.json();
+      this._cache = data;
+      this._cacheTime = Date.now();
+      return data;
+    } catch (e) {
+      console.warn('Hebcal fetch failed:', e);
+      return null;
+    }
+  },
+
+  async getHolidays() {
+    const data = await this.fetchData();
+    if (!data || !data.items) return [];
+    return data.items.filter(i => i.category === 'holiday').map(i => ({
+      title:    i.title,
+      date:     i.date,
+      hebrew:   i.hebrew || '',
+      subcat:   i.subcat || '',
+      memo:     i.memo   || '',
+      yomtov:   i.yomtov || false
+    }));
+  },
+
+  async getParasha() {
+    const data = await this.fetchData();
+    if (!data || !data.items) return null;
+    const now = new Date();
+    const parashot = data.items
+      .filter(i => i.category === 'parashat')
+      .map(i => ({ title: i.title.replace('Parashat ', ''), date: i.date, hebrew: i.hebrew || '' }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Find current or next upcoming parasha
+    for (const p of parashot) {
+      const pDate = new Date(p.date);
+      if (pDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)) return p;
+    }
+    return parashot[parashot.length - 1] || null;
+  },
+
+  async getCandleLighting() {
+    const data = await this.fetchData();
+    if (!data || !data.items) return null;
+    const now = new Date();
+    const candles = data.items
+      .filter(i => i.category === 'candles')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    for (const c of candles) {
+      if (new Date(c.date) >= now) return { title: c.title, date: c.date };
+    }
+    return candles[candles.length - 1] ? { title: candles[candles.length - 1].title, date: candles[candles.length - 1].date } : null;
+  },
+
+  async getHavdalah() {
+    const data = await this.fetchData();
+    if (!data || !data.items) return null;
+    const now = new Date();
+    const havdalahs = data.items
+      .filter(i => i.category === 'havdalah')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    for (const h of havdalahs) {
+      if (new Date(h.date) >= now) return { title: h.title, date: h.date };
+    }
+    return havdalahs[havdalahs.length - 1] ? { title: havdalahs[havdalahs.length - 1].title, date: havdalahs[havdalahs.length - 1].date } : null;
+  }
+};
+
+
+// ------------------------------------------------------------
+// 3. Parashot Kids Data (Spanish)
+// ------------------------------------------------------------
+const PARASHOT_DATA = {
+  'Bereshit': {
+    summary_kids: 'Esta semana leemos sobre cómo Dios creó todo el mundo en seis días. Primero hizo la luz, luego el cielo, los mares, los árboles, los animales y finalmente a Adán y Javá. ¡El séptimo día descansó y eso es Shabat!',
+    questions: ['¿Qué fue lo primero que Dios creó?', '¿Por qué crees que Dios descansó el séptimo día?', 'Si pudieras crear un animal nuevo, ¿cómo sería?'],
+    activity: '¡Dibuja tu propio Jardín del Edén con todos los animales que quieras!'
+  },
+  'Noach': {
+    summary_kids: 'Dios le pide a Noaj que construya un arca enorme porque va a llover muchísimo. Noaj invitó a dos animalitos de cada especie para que estuvieran a salvo. Después del diluvio, Dios puso un arcoíris en el cielo como promesa.',
+    questions: ['¿Cuál animal te hubiera gustado cuidar dentro del arca?', '¿Cómo crees que se sentía estar lloviendo por 40 días seguidos?', '¿Qué significa el arcoíris para ti?'],
+    activity: '¡Colorea el Arca de Noaj y todos sus animales!'
+  },
+  'Lech Lecha': {
+    summary_kids: 'Dios le dice a Abraham: "Lech Lechá" que significa "Ve por ti". Abraham dejó su casa y viajó a una tierra nueva que Dios le prometió. Fue muy valiente porque no sabía a dónde iba.',
+    questions: ['¿Alguna vez te mudaste a un lugar nuevo? ¿Cómo te sentiste?', '¿Qué llevarías en tu maleta si tuvieras que irte lejos?', '¿Por qué crees que Abraham confió en Dios?'],
+    activity: '¡Dibuja el mapa del viaje de Abraham!'
+  },
+  'Vayera': {
+    summary_kids: 'Abraham recibe tres visitantes misteriosos en su tienda. Les da comida y agua porque era muy hospitalario. Los visitantes le dan una gran noticia: ¡Sara va a tener un bebé!',
+    questions: ['¿Cómo recibes tú a los invitados en tu casa?', '¿Por qué es importante ser amable con los visitantes?', '¿Qué comida le prepararías a un invitado especial?'],
+    activity: '¡Prepara una tarjeta de bienvenida para un invitado!'
+  },
+  'Toldot': {
+    summary_kids: 'Esta semana conocemos a los gemelos Esav y Yaakov. Eran muy diferentes: Esav era cazador y peludo, y Yaakov era tranquilo y le gustaba estudiar. A veces los hermanos son muy distintos ¡y eso está bien!',
+    questions: ['¿En qué te pareces a tus hermanos o amigos?', '¿En qué eres diferente?', '¿Qué es lo especial de ser único?'],
+    activity: '¡Dibuja a dos gemelos que sean totalmente diferentes!'
+  },
+  'Vayetze': {
+    summary_kids: 'Yaakov tiene un sueño increíble: ve una escalera gigante que llega hasta el cielo con ángeles subiendo y bajando. Dios le promete que lo cuidará siempre.',
+    questions: ['¿Alguna vez tuviste un sueño muy especial?', '¿Cómo te imaginas una escalera al cielo?', '¿Qué le preguntarías a un ángel?'],
+    activity: '¡Dibuja la escalera de Yaakov con ángeles!'
+  },
+  'Miketz': {
+    summary_kids: 'Yosef interpreta los sueños del Faraón: habrá 7 años de mucha comida y 7 años de hambre. Gracias a su sabiduría, Yosef se convierte en el segundo hombre más importante de Egipto.',
+    questions: ['¿Alguna vez ayudaste a alguien con un problema difícil?', '¿Por qué es bueno guardar comida para después?', '¿Qué harías si fueras el rey de Egipto?'],
+    activity: '¡Dibuja los sueños del Faraón!'
+  },
+  'Shemot': {
+    summary_kids: 'Nace Moshé (Moisés). Su mamá lo pone en una canasta en el río para salvarlo. La hija del Faraón lo encuentra y lo cría como un príncipe. Cuando crece, ve una zarza que arde pero no se quema.',
+    questions: ['¿Qué harías si encontraras un bebé en una canasta?', '¿Por qué crees que la zarza no se quemaba?', '¿Cómo te sentirías si Dios te hablara?'],
+    activity: '¡Dibuja la canasta de Moshé flotando en el río!'
+  }
+};
+
+
+// ------------------------------------------------------------
+// 4. Dark Mode
+// ------------------------------------------------------------
+function initTheme() {
+  const theme = DataStore.getTheme();
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeIcon(theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  DataStore.saveTheme(next);
+  updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.innerHTML = theme === 'dark'
+    ? '<i class="ph ph-sun"></i>'
+    : '<i class="ph ph-moon"></i>';
+}
+
+
+// ------------------------------------------------------------
+// 5. Modal System
+// ------------------------------------------------------------
+function openModal(title, bodyHtml, onSubmit) {
+  closeModal();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+
+  modal.innerHTML = `
+    <div class="modal-header">
+      <h3>${title}</h3>
+      <button class="modal-close" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">${bodyHtml}</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-cancel">Cancelar</button>
+      <button class="btn btn-primary modal-submit">Guardar</button>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Force reflow then add visible class for animation
+  requestAnimationFrame(() => overlay.classList.add('visible'));
+
+  // Event listeners
+  overlay.querySelector('.modal-close').addEventListener('click', closeModal);
+  overlay.querySelector('.modal-cancel').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  overlay.querySelector('.modal-submit').addEventListener('click', () => {
+    if (onSubmit) onSubmit();
+  });
+}
+
+function closeModal() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('visible');
+    setTimeout(() => overlay.remove(), 200);
+  }
+}
+
+
+// ------------------------------------------------------------
+// 6. Toast System
+// ------------------------------------------------------------
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: 'ph-check-circle', error: 'ph-x-circle', info: 'ph-info' };
+  toast.innerHTML = `<i class="ph ${icons[type] || icons.info}"></i> ${message}`;
+  container.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  setTimeout(() => {
+    toast.classList.add('fadeout');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+
+// ------------------------------------------------------------
+// 7. Utilities
+// ------------------------------------------------------------
+function formatCurrency(n) {
+  return '$' + n.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatDateShort(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function daysUntil(dateStr) {
+  const target = new Date(dateStr);
+  const now = new Date();
+  target.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function getMonthName(monthIndex) {
+  const names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  return names[monthIndex] || '';
+}
+
+
+// ------------------------------------------------------------
+// 8. App State & Navigation
+// ------------------------------------------------------------
+const state = {
+  currentView: 'dashboard',
+  membersPage: 1,
+  membersPerPage: 10,
+  calendarMonth: new Date().getMonth(),
+  calendarYear: new Date().getFullYear()
+};
+
+const viewContainer = document.getElementById('view-container');
+
 document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
-    renderView(state.currentView);
+  DataStore.seedData();
+  initTheme();
+
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const view = e.currentTarget.getAttribute('data-view');
+      if (view && view !== state.currentView) {
+        navItems.forEach(nav => nav.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        renderView(view);
+      }
+    });
+  });
+
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+  renderView(state.currentView);
 });
 
-// Navigation Logic
-function initNavigation() {
-    navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const view = e.currentTarget.getAttribute('data-view');
-            
-            if (view && view !== state.currentView) {
-                // Update active state in sidebar
-                navItems.forEach(nav => nav.classList.remove('active'));
-                e.currentTarget.classList.add('active');
-                
-                // Render new view
-                renderView(view);
-            }
-        });
-    });
-}
 
+// ------------------------------------------------------------
 // View Renderer
+// ------------------------------------------------------------
 function renderView(viewName) {
-    state.currentView = viewName;
-    
-    // Smooth transition
-    viewContainer.style.opacity = 0;
-    
-    setTimeout(() => {
-        // Find the template
-        const templateId = `view-${viewName}`;
-        const template = document.getElementById(templateId);
-        
-        if (template) {
-            // Clone template content
-            const content = template.content.cloneNode(true);
-            viewContainer.innerHTML = '';
-            viewContainer.appendChild(content);
-            
-            // Initialize specific view logic
-            if (viewName === 'dashboard') {
-                initDashboard();
-            } else if (viewName === 'members') {
-                initMembers();
-            }
-        } else {
-            // Fallback for unimplemented views
-            viewContainer.innerHTML = `
-                <div class="view-header">
-                    <h2 class="view-title">Vista en Desarrollo</h2>
-                    <p class="view-subtitle">El módulo "${viewName}" estará disponible próximamente.</p>
-                </div>
-            `;
-        }
-        
-        viewContainer.style.opacity = 1;
-    }, 150);
+  state.currentView = viewName;
+  viewContainer.style.opacity = 0;
+
+  setTimeout(() => {
+    const templateId = `view-${viewName}`;
+    const template = document.getElementById(templateId);
+
+    if (template) {
+      const content = template.content.cloneNode(true);
+      viewContainer.innerHTML = '';
+      viewContainer.appendChild(content);
+
+      const initializers = {
+        dashboard:       initDashboard,
+        members:         initMembers,
+        finances:        initFinances,
+        calendar:        initCalendar,
+        yahrzeits:       initYahrzeits,
+        communications:  initCommunications,
+        kids:            initKids
+      };
+
+      if (initializers[viewName]) initializers[viewName]();
+    } else {
+      viewContainer.innerHTML = `
+        <div class="view-header">
+          <h2 class="view-title">Vista en Desarrollo</h2>
+          <p class="view-subtitle">El módulo "${escapeHtml(viewName)}" estará disponible próximamente.</p>
+        </div>
+      `;
+    }
+
+    viewContainer.style.opacity = 1;
+  }, 150);
 }
 
-// Dashboard Initialization
+
+// ============================================================
+// 9. VIEW INITIALIZERS
+// ============================================================
+
+// ------------------------------------------------------------
+// 9a. Dashboard
+// ------------------------------------------------------------
 function initDashboard() {
-    const yahrzeitList = document.getElementById('yahrzeit-list');
-    const servicesList = document.getElementById('services-list');
-    
-    // Render Yahrzeits
-    if (yahrzeitList) {
-        yahrzeitList.innerHTML = mockYahrzeits.map(y => `
-            <li class="list-item">
-                <div class="item-icon"><i class="ph ph-candle"></i></div>
-                <div class="item-content">
-                    <div class="item-title">${y.name}</div>
-                    <div class="item-desc">${y.relation}</div>
-                </div>
-                <div class="item-meta">
-                    <div style="font-weight: 500; font-size: 14px;">${y.date}</div>
-                    <span class="badge-tag badge-${y.type}">Faltan ${y.days} días</span>
-                </div>
-            </li>
-        `).join('');
+  const members   = DataStore.getMembers();
+  const donations = DataStore.getDonations();
+  const yahrzeits = DataStore.getYahrzeits();
+
+  // --- Stat Cards ---
+  const activeMembers = members.filter(m => m.status === 'active').length;
+  const statFamilies = document.getElementById('stat-families');
+  if (statFamilies) statFamilies.textContent = activeMembers;
+
+  // Current month donations
+  const now = new Date();
+  const currentMonthDonations = donations
+    .filter(d => {
+      const dd = new Date(d.date);
+      return dd.getMonth() === now.getMonth() && dd.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, d) => sum + d.amount, 0);
+  const statDonations = document.getElementById('stat-donations');
+  if (statDonations) statDonations.textContent = formatCurrency(currentMonthDonations);
+
+  // Upcoming yahrzeits (next 7 days)
+  const upcomingYahrzeits = yahrzeits.filter(y => {
+    const days = daysUntil(y.gregorianDate);
+    return days >= 0 && days <= 7;
+  });
+  const statYahrzeits = document.getElementById('stat-yahrzeits');
+  if (statYahrzeits) statYahrzeits.textContent = upcomingYahrzeits.length;
+
+  // Events from Hebcal
+  const statEvents = document.getElementById('stat-events');
+  HebrewCalendar.fetchData().then(data => {
+    if (data && data.items) {
+      const thisMonthEvents = data.items.filter(i => {
+        if (i.category !== 'holiday') return false;
+        const iDate = new Date(i.date);
+        return iDate.getMonth() === now.getMonth() && iDate.getFullYear() === now.getFullYear();
+      });
+      if (statEvents) statEvents.textContent = thisMonthEvents.length;
+    } else {
+      if (statEvents) statEvents.textContent = '—';
     }
-    
-    // Render Services
-    if (servicesList) {
-        servicesList.innerHTML = mockServices.map(s => `
-            <li class="list-item">
-                <div class="item-icon"><i class="ph ph-book-open"></i></div>
-                <div class="item-content">
-                    <div class="item-title">${s.title}</div>
-                    <div class="item-desc"><i class="ph ph-map-pin"></i> ${s.location}</div>
-                </div>
-                <div class="item-meta">
-                    <div style="font-weight: 500; font-size: 14px; margin-bottom: 4px;">${s.time}</div>
-                    <span class="badge-tag badge-primary">${s.tag}</span>
-                </div>
-            </li>
-        `).join('');
+  }).catch(() => {
+    if (statEvents) statEvents.textContent = '—';
+  });
+
+  // --- Yahrzeit list ---
+  const yahrzeitList = document.getElementById('yahrzeit-list');
+  if (yahrzeitList) {
+    const sorted = [...yahrzeits]
+      .map(y => ({ ...y, _days: daysUntil(y.gregorianDate) }))
+      .filter(y => y._days >= 0)
+      .sort((a, b) => a._days - b._days)
+      .slice(0, 5);
+
+    if (sorted.length === 0) {
+      yahrzeitList.innerHTML = '<li class="list-item"><div class="item-content"><div class="item-desc">No hay yahrzeits próximos</div></div></li>';
+    } else {
+      yahrzeitList.innerHTML = sorted.map(y => {
+        const badgeType = y._days <= 3 ? 'primary' : y._days <= 7 ? 'warning' : 'neutral';
+        const member = members.find(m => m.id === y.memberId);
+        const relation = member ? `${y.relation} de ${member.name}` : y.relation;
+        return `
+          <li class="list-item">
+            <div class="item-icon"><i class="ph ph-candle"></i></div>
+            <div class="item-content">
+              <div class="item-title">${escapeHtml(y.deceasedName)}</div>
+              <div class="item-desc">${escapeHtml(relation)}</div>
+            </div>
+            <div class="item-meta">
+              <div style="font-weight:500;font-size:14px;">${formatDate(y.gregorianDate)}</div>
+              <span class="badge-tag badge-${badgeType}">${y._days === 0 ? 'Hoy' : `Faltan ${y._days} días`}</span>
+            </div>
+          </li>`;
+      }).join('');
     }
+  }
+
+  // --- Services list ---
+  const servicesList = document.getElementById('services-list');
+  if (servicesList) {
+    const staticServices = [
+      { title: 'Kabbalat Shabbat', time: 'Viernes, 19:30 hrs', location: 'Santuario Principal', tag: 'Shabbat' },
+      { title: 'Shacharit',        time: 'Sábado, 09:00 hrs',  location: 'Santuario Principal', tag: 'Shabbat' },
+      { title: 'Clase de Torá',    time: 'Martes, 20:00 hrs',  location: 'Biblioteca',          tag: 'Estudio' }
+    ];
+    servicesList.innerHTML = staticServices.map(s => `
+      <li class="list-item">
+        <div class="item-icon"><i class="ph ph-book-open"></i></div>
+        <div class="item-content">
+          <div class="item-title">${s.title}</div>
+          <div class="item-desc"><i class="ph ph-map-pin"></i> ${s.location}</div>
+        </div>
+        <div class="item-meta">
+          <div style="font-weight:500;font-size:14px;margin-bottom:4px;">${s.time}</div>
+          <span class="badge-tag badge-primary">${s.tag}</span>
+        </div>
+      </li>`).join('');
+  }
 }
 
-// Members Initialization
+
+// ------------------------------------------------------------
+// 9b. Members
+// ------------------------------------------------------------
 function initMembers() {
-    const membersTableBody = document.getElementById('members-table-body');
-    
-    if (membersTableBody) {
-        membersTableBody.innerHTML = mockMembers.map(m => {
-            const initials = m.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-            const statusHtml = m.status === 'active' 
-                ? `<div class="status-indicator"><div class="status-dot active"></div>Activo</div>`
-                : `<div class="status-indicator"><div class="status-dot inactive"></div>Inactivo</div>`;
-                
-            return `
-                <tr>
-                    <td>
-                        <div class="member-cell">
-                            <div class="member-avatar">${initials}</div>
-                            <div>
-                                <div class="member-name">${m.name}</div>
-                                <div class="member-email">${m.email}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${m.family}</td>
-                    <td>${m.phone}</td>
-                    <td>${statusHtml}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-small-icon" title="Editar"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-small-icon" title="Ver Perfil"><i class="ph ph-eye"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+  state.membersPage = 1;
+  renderMembersTable();
+
+  const searchInput = document.getElementById('member-search');
+  if (searchInput) {
+    searchInput.addEventListener('keyup', () => { state.membersPage = 1; renderMembersTable(); });
+  }
+
+  const statusFilter = document.getElementById('member-status-filter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', () => { state.membersPage = 1; renderMembersTable(); });
+  }
+
+  const addBtn = document.getElementById('btn-add-member');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => openMemberModal());
+  }
+}
+
+function getFilteredMembers() {
+  let members = DataStore.getMembers();
+  const search = (document.getElementById('member-search')?.value || '').toLowerCase();
+  const status = document.getElementById('member-status-filter')?.value || 'all';
+
+  if (search) {
+    members = members.filter(m =>
+      m.name.toLowerCase().includes(search) ||
+      m.family.toLowerCase().includes(search) ||
+      m.email.toLowerCase().includes(search)
+    );
+  }
+  if (status !== 'all') {
+    members = members.filter(m => m.status === status);
+  }
+  return members;
+}
+
+function renderMembersTable() {
+  const filtered = getFilteredMembers();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / state.membersPerPage));
+  if (state.membersPage > totalPages) state.membersPage = totalPages;
+
+  const start = (state.membersPage - 1) * state.membersPerPage;
+  const pageMembers = filtered.slice(start, start + state.membersPerPage);
+
+  const tbody = document.getElementById('members-table-body');
+  if (tbody) {
+    tbody.innerHTML = pageMembers.map(m => {
+      const initials = m.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const statusDot = m.status === 'active' ? 'active' : 'inactive';
+      const statusLabel = m.status === 'active' ? 'Activo' : 'Inactivo';
+      return `
+        <tr>
+          <td>
+            <div class="member-cell">
+              <div class="member-avatar">${initials}</div>
+              <div>
+                <div class="member-name">${escapeHtml(m.name)}</div>
+                <div class="member-email">${escapeHtml(m.email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(m.family)}</td>
+          <td>${escapeHtml(m.phone)}</td>
+          <td>
+            <div class="status-indicator">
+              <div class="status-dot ${statusDot}"></div>${statusLabel}
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-small-icon" title="Editar" onclick="openMemberModal('${m.id}')"><i class="ph ph-pencil-simple"></i></button>
+              <button class="btn-small-icon" title="Eliminar" onclick="deleteMember('${m.id}')"><i class="ph ph-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // Update count
+  const countEl = document.getElementById('member-count');
+  if (countEl) countEl.textContent = `${filtered.length} miembro${filtered.length !== 1 ? 's' : ''}`;
+
+  // Pagination
+  renderMembersPagination(totalPages);
+}
+
+function renderMembersPagination(totalPages) {
+  const container = document.getElementById('members-pagination');
+  if (!container) return;
+
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  let html = `<button class="btn btn-secondary btn-sm" ${state.membersPage <= 1 ? 'disabled' : ''} onclick="changeMembersPage(${state.membersPage - 1})"><i class="ph ph-caret-left"></i></button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="btn ${i === state.membersPage ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="changeMembersPage(${i})">${i}</button>`;
+  }
+  html += `<button class="btn btn-secondary btn-sm" ${state.membersPage >= totalPages ? 'disabled' : ''} onclick="changeMembersPage(${state.membersPage + 1})"><i class="ph ph-caret-right"></i></button>`;
+  container.innerHTML = html;
+}
+
+function changeMembersPage(page) {
+  state.membersPage = page;
+  renderMembersTable();
+}
+
+function openMemberModal(memberId) {
+  const members = DataStore.getMembers();
+  const existing = memberId ? members.find(m => m.id === memberId) : null;
+  const title = existing ? 'Editar Miembro' : 'Nuevo Miembro';
+
+  const bodyHtml = `
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="modal-member-name">Nombre Completo</label>
+        <input type="text" id="modal-member-name" class="form-input" value="${escapeHtml(existing?.name || '')}" placeholder="Nombre y apellido">
+      </div>
+      <div class="form-group">
+        <label for="modal-member-family">Familia</label>
+        <input type="text" id="modal-member-family" class="form-input" value="${escapeHtml(existing?.family || '')}" placeholder="Familia Apellido">
+      </div>
+      <div class="form-group">
+        <label for="modal-member-email">Email</label>
+        <input type="email" id="modal-member-email" class="form-input" value="${escapeHtml(existing?.email || '')}" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label for="modal-member-phone">Teléfono</label>
+        <input type="text" id="modal-member-phone" class="form-input" value="${escapeHtml(existing?.phone || '')}" placeholder="+34 612-345-678">
+      </div>
+      <div class="form-group form-group-full">
+        <label class="checkbox-label">
+          <input type="checkbox" id="modal-member-children" ${existing?.hasChildren ? 'checked' : ''}>
+          Tiene hijos en edad escolar
+        </label>
+      </div>
+    </div>`;
+
+  openModal(title, bodyHtml, () => {
+    const name    = document.getElementById('modal-member-name')?.value.trim();
+    const family  = document.getElementById('modal-member-family')?.value.trim();
+    const email   = document.getElementById('modal-member-email')?.value.trim();
+    const phone   = document.getElementById('modal-member-phone')?.value.trim();
+    const hasChildren = document.getElementById('modal-member-children')?.checked || false;
+
+    if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
+
+    const all = DataStore.getMembers();
+    if (existing) {
+      const idx = all.findIndex(m => m.id === existing.id);
+      if (idx !== -1) {
+        all[idx] = { ...all[idx], name, family, email, phone, hasChildren };
+        DataStore.saveMembers(all);
+        showToast('Miembro actualizado correctamente');
+      }
+    } else {
+      all.push({
+        id: generateId(), name, family, email, phone, hasChildren,
+        status: 'active', joinDate: new Date().toISOString().split('T')[0]
+      });
+      DataStore.saveMembers(all);
+      showToast('Miembro agregado correctamente');
     }
+    closeModal();
+    renderMembersTable();
+  });
+}
+
+function deleteMember(memberId) {
+  if (!confirm('¿Estás seguro de que deseas eliminar este miembro?')) return;
+  const members = DataStore.getMembers().filter(m => m.id !== memberId);
+  DataStore.saveMembers(members);
+  showToast('Miembro eliminado', 'info');
+  renderMembersTable();
+}
+
+
+// ------------------------------------------------------------
+// 9c. Finances
+// ------------------------------------------------------------
+function initFinances() {
+  const donations = DataStore.getDonations();
+  const now = new Date();
+
+  // Current month calculations
+  const thisMonthDonations = donations.filter(d => {
+    const dd = new Date(d.date);
+    return dd.getMonth() === now.getMonth() && dd.getFullYear() === now.getFullYear();
+  });
+
+  const donationsTotal = thisMonthDonations.filter(d => d.type === 'Donación').reduce((s, d) => s + d.amount, 0);
+  const duesTotal      = thisMonthDonations.filter(d => d.type === 'Cuota Mensual').reduce((s, d) => s + d.amount, 0);
+  const pledgesTotal   = donations.filter(d => d.type === 'Promesa').reduce((s, d) => s + d.amount, 0);
+  const allTotal       = donations.reduce((s, d) => s + d.amount, 0);
+
+  const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  el('finance-donations-month', formatCurrency(donationsTotal));
+  el('finance-dues-month', formatCurrency(duesTotal));
+  el('finance-pledges', formatCurrency(pledgesTotal));
+  el('finance-balance', formatCurrency(allTotal));
+
+  // --- Bar chart (last 6 months) ---
+  renderFinanceChart(donations);
+
+  // --- Recent transactions ---
+  renderTransactionsList(donations);
+
+  // --- Add donation button ---
+  const addBtn = document.getElementById('btn-add-donation');
+  if (addBtn) addBtn.addEventListener('click', openDonationModal);
+}
+
+function renderFinanceChart(donations) {
+  const chartEl = document.getElementById('finance-chart');
+  if (!chartEl) return;
+
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ month: d.getMonth(), year: d.getFullYear(), label: getMonthName(d.getMonth()).substring(0, 3) });
+  }
+
+  const monthTotals = months.map(m => {
+    const total = donations
+      .filter(d => {
+        const dd = new Date(d.date);
+        return dd.getMonth() === m.month && dd.getFullYear() === m.year;
+      })
+      .reduce((s, d) => s + d.amount, 0);
+    return { ...m, total };
+  });
+
+  const maxVal = Math.max(...monthTotals.map(m => m.total), 1);
+
+  chartEl.innerHTML = `
+    <div class="chart-bars">
+      ${monthTotals.map(m => {
+        const pct = (m.total / maxVal) * 100;
+        return `
+          <div class="chart-bar-group">
+            <div class="chart-bar-value">${formatCurrency(m.total)}</div>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" style="height:${pct}%"></div>
+            </div>
+            <div class="chart-bar-label">${m.label}</div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderTransactionsList(donations) {
+  const listEl = document.getElementById('transactions-list');
+  if (!listEl) return;
+
+  const sorted = [...donations].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+
+  if (sorted.length === 0) {
+    listEl.innerHTML = '<p class="empty-text">No hay transacciones registradas.</p>';
+    return;
+  }
+
+  listEl.innerHTML = sorted.map(d => {
+    const typeIcons = { 'Donación': 'ph-gift', 'Cuota Mensual': 'ph-calendar-check', 'Promesa': 'ph-handshake', 'Kiddush': 'ph-wine' };
+    const icon = typeIcons[d.type] || 'ph-currency-dollar';
+    return `
+      <li class="list-item">
+        <div class="item-icon"><i class="ph ${icon}"></i></div>
+        <div class="item-content">
+          <div class="item-title">${escapeHtml(d.memberName)}</div>
+          <div class="item-desc">${escapeHtml(d.type)}${d.notes ? ' — ' + escapeHtml(d.notes) : ''}</div>
+        </div>
+        <div class="item-meta">
+          <div style="font-weight:600;font-size:14px;color:var(--color-primary)">${formatCurrency(d.amount)}</div>
+          <div style="font-size:12px;color:var(--text-secondary)">${formatDateShort(d.date)}</div>
+        </div>
+      </li>`;
+  }).join('');
+}
+
+function openDonationModal() {
+  const members = DataStore.getMembers();
+  const memberOptions = members.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+
+  const bodyHtml = `
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="modal-don-member">Miembro</label>
+        <select id="modal-don-member" class="form-input">${memberOptions}</select>
+      </div>
+      <div class="form-group">
+        <label for="modal-don-amount">Monto ($)</label>
+        <input type="number" id="modal-don-amount" class="form-input" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label for="modal-don-type">Tipo</label>
+        <select id="modal-don-type" class="form-input">
+          <option value="Donación">Donación</option>
+          <option value="Cuota Mensual">Cuota Mensual</option>
+          <option value="Promesa">Promesa</option>
+          <option value="Kiddush">Kiddush</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modal-don-date">Fecha</label>
+        <input type="date" id="modal-don-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group form-group-full">
+        <label for="modal-don-notes">Notas</label>
+        <input type="text" id="modal-don-notes" class="form-input" placeholder="Opcional">
+      </div>
+    </div>`;
+
+  openModal('Nueva Donación', bodyHtml, () => {
+    const memberId = document.getElementById('modal-don-member')?.value;
+    const amount   = parseFloat(document.getElementById('modal-don-amount')?.value);
+    const type     = document.getElementById('modal-don-type')?.value;
+    const date     = document.getElementById('modal-don-date')?.value;
+    const notes    = document.getElementById('modal-don-notes')?.value.trim();
+
+    if (!memberId || isNaN(amount) || amount <= 0) {
+      showToast('Por favor completa los campos obligatorios', 'error');
+      return;
+    }
+
+    const member = DataStore.getMembers().find(m => m.id === memberId);
+    const donations = DataStore.getDonations();
+    donations.push({
+      id: generateId(),
+      memberId,
+      memberName: member ? member.name : 'Desconocido',
+      amount, type, date, notes
+    });
+    DataStore.saveDonations(donations);
+    closeModal();
+    showToast('Donación registrada correctamente');
+    initFinances();
+  });
+}
+
+
+// ------------------------------------------------------------
+// 9d. Calendar
+// ------------------------------------------------------------
+function initCalendar() {
+  renderCalendarGrid();
+  loadCalendarData();
+
+  const prevBtn = document.getElementById('cal-prev');
+  const nextBtn = document.getElementById('cal-next');
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    state.calendarMonth--;
+    if (state.calendarMonth < 0) { state.calendarMonth = 11; state.calendarYear--; }
+    renderCalendarGrid();
+    loadCalendarData();
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    state.calendarMonth++;
+    if (state.calendarMonth > 11) { state.calendarMonth = 0; state.calendarYear++; }
+    renderCalendarGrid();
+    loadCalendarData();
+  });
+}
+
+function renderCalendarGrid() {
+  const grid = document.getElementById('calendar-grid');
+  const titleEl = document.getElementById('calendar-month-title');
+  if (!grid) return;
+
+  const year  = state.calendarYear;
+  const month = state.calendarMonth;
+
+  if (titleEl) titleEl.textContent = `${getMonthName(month)} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  const dayLabels = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  let html = dayLabels.map(d => `<div class="cal-header">${d}</div>`).join('');
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="cal-day empty"></div>';
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    const isShabat = new Date(year, month, d).getDay() === 6;
+    const classes = ['cal-day'];
+    if (isToday) classes.push('today');
+    if (isShabat) classes.push('shabat');
+
+    html += `<div class="${classes.join(' ')}" data-date="${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}">
+      <span class="cal-day-num">${d}</span>
+      <div class="cal-day-dots"></div>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+async function loadCalendarData() {
+  try {
+    // Holidays
+    const holidays = await HebrewCalendar.getHolidays();
+    const grid = document.getElementById('calendar-grid');
+    if (grid && holidays.length > 0) {
+      holidays.forEach(h => {
+        const dateStr = h.date.split('T')[0];
+        const cell = grid.querySelector(`[data-date="${dateStr}"]`);
+        if (cell) {
+          const dots = cell.querySelector('.cal-day-dots');
+          if (dots && !dots.querySelector('.cal-dot')) {
+            const dot = document.createElement('span');
+            dot.className = 'cal-dot holiday';
+            dot.title = h.title;
+            dots.appendChild(dot);
+          }
+        }
+      });
+    }
+
+    // Holidays list
+    const holidaysList = document.getElementById('holidays-list');
+    if (holidaysList) {
+      const month = state.calendarMonth;
+      const year  = state.calendarYear;
+      const thisMonthHolidays = holidays.filter(h => {
+        const d = new Date(h.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      });
+
+      if (thisMonthHolidays.length === 0) {
+        holidaysList.innerHTML = '<p class="empty-text">No hay festividades este mes.</p>';
+      } else {
+        holidaysList.innerHTML = thisMonthHolidays.map(h => `
+          <li class="list-item">
+            <div class="item-icon"><i class="ph ph-star"></i></div>
+            <div class="item-content">
+              <div class="item-title">${escapeHtml(h.title)}</div>
+              <div class="item-desc">${escapeHtml(h.hebrew)}</div>
+            </div>
+            <div class="item-meta">
+              <div style="font-size:13px;">${formatDateShort(h.date)}</div>
+            </div>
+          </li>`).join('');
+      }
+    }
+
+    // Shabbat info
+    const shabbatInfo = document.getElementById('shabbat-info');
+    if (shabbatInfo) {
+      const [parasha, candles, havdalah] = await Promise.all([
+        HebrewCalendar.getParasha(),
+        HebrewCalendar.getCandleLighting(),
+        HebrewCalendar.getHavdalah()
+      ]);
+
+      let infoHtml = '';
+      if (parasha) {
+        infoHtml += `<div class="shabbat-detail"><strong>Parashá:</strong> ${escapeHtml(parasha.title)}</div>`;
+        if (parasha.hebrew) infoHtml += `<div class="shabbat-detail shabbat-hebrew">${escapeHtml(parasha.hebrew)}</div>`;
+      }
+      if (candles) {
+        const time = new Date(candles.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        infoHtml += `<div class="shabbat-detail"><i class="ph ph-candle"></i> <strong>Encendido de velas:</strong> ${time}</div>`;
+      }
+      if (havdalah) {
+        const time = new Date(havdalah.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        infoHtml += `<div class="shabbat-detail"><i class="ph ph-moon-stars"></i> <strong>Havdalá:</strong> ${time}</div>`;
+      }
+
+      shabbatInfo.innerHTML = infoHtml || '<p class="empty-text">Información de Shabat no disponible.</p>';
+    }
+  } catch (e) {
+    console.warn('Error loading calendar data:', e);
+  }
+}
+
+
+// ------------------------------------------------------------
+// 9e. Yahrzeits
+// ------------------------------------------------------------
+function initYahrzeits() {
+  renderYahrzeitCards();
+
+  const addBtn = document.getElementById('btn-add-yahrzeit');
+  if (addBtn) addBtn.addEventListener('click', openYahrzeitModal);
+}
+
+function renderYahrzeitCards() {
+  const container = document.getElementById('yahrzeits-container');
+  if (!container) return;
+
+  const yahrzeits = DataStore.getYahrzeits();
+  const members   = DataStore.getMembers();
+
+  if (yahrzeits.length === 0) {
+    container.innerHTML = '<p class="empty-text">No hay yahrzeits registrados. Agrega el primero.</p>';
+    return;
+  }
+
+  const sorted = [...yahrzeits]
+    .map(y => ({ ...y, _days: daysUntil(y.gregorianDate) }))
+    .sort((a, b) => a._days - b._days);
+
+  container.innerHTML = sorted.map(y => {
+    const member = members.find(m => m.id === y.memberId);
+    const isUpcoming = y._days >= 0 && y._days <= 30;
+    const cardClass = isUpcoming ? 'yahrzeit-card upcoming' : 'yahrzeit-card';
+    const badge = y._days < 0
+      ? `<span class="badge-tag badge-neutral">Pasado</span>`
+      : y._days === 0
+        ? `<span class="badge-tag badge-primary">Hoy</span>`
+        : y._days <= 7
+          ? `<span class="badge-tag badge-warning">Faltan ${y._days} días</span>`
+          : `<span class="badge-tag badge-neutral">Faltan ${y._days} días</span>`;
+
+    return `
+      <div class="${cardClass}">
+        <div class="yahrzeit-card-header">
+          <div>
+            <h4 class="yahrzeit-name"><i class="ph ph-candle"></i> ${escapeHtml(y.deceasedName)}</h4>
+            <p class="yahrzeit-hebrew">${escapeHtml(y.hebrewName)}</p>
+          </div>
+          ${badge}
+        </div>
+        <div class="yahrzeit-card-body">
+          <div class="yahrzeit-detail"><strong>Relación:</strong> ${escapeHtml(y.relation)}</div>
+          <div class="yahrzeit-detail"><strong>Fecha:</strong> ${formatDate(y.gregorianDate)}</div>
+          ${member ? `<div class="yahrzeit-detail"><strong>Familia:</strong> ${escapeHtml(member.name)}</div>` : ''}
+        </div>
+        <div class="yahrzeit-card-actions">
+          <button class="btn-small-icon" title="Eliminar" onclick="deleteYahrzeit('${y.id}')"><i class="ph ph-trash"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openYahrzeitModal() {
+  const members = DataStore.getMembers();
+  const memberOptions = members.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+
+  const bodyHtml = `
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="modal-yah-name">Nombre del Fallecido</label>
+        <input type="text" id="modal-yah-name" class="form-input" placeholder="Nombre completo">
+      </div>
+      <div class="form-group">
+        <label for="modal-yah-hebrew">Nombre Hebreo</label>
+        <input type="text" id="modal-yah-hebrew" class="form-input" placeholder="Ej: Yitzjak ben Avraham">
+      </div>
+      <div class="form-group">
+        <label for="modal-yah-relation">Relación</label>
+        <select id="modal-yah-relation" class="form-input">
+          <option value="Padre">Padre</option>
+          <option value="Madre">Madre</option>
+          <option value="Abuelo">Abuelo</option>
+          <option value="Abuela">Abuela</option>
+          <option value="Esposo">Esposo</option>
+          <option value="Esposa">Esposa</option>
+          <option value="Hijo">Hijo</option>
+          <option value="Hija">Hija</option>
+          <option value="Hermano">Hermano</option>
+          <option value="Hermana">Hermana</option>
+          <option value="Tío">Tío</option>
+          <option value="Tía">Tía</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modal-yah-date">Fecha Gregoriana</label>
+        <input type="date" id="modal-yah-date" class="form-input">
+      </div>
+      <div class="form-group form-group-full">
+        <label for="modal-yah-member">Miembro Asociado</label>
+        <select id="modal-yah-member" class="form-input">${memberOptions}</select>
+      </div>
+    </div>`;
+
+  openModal('Nuevo Yahrzeit', bodyHtml, () => {
+    const deceasedName = document.getElementById('modal-yah-name')?.value.trim();
+    const hebrewName   = document.getElementById('modal-yah-hebrew')?.value.trim();
+    const relation     = document.getElementById('modal-yah-relation')?.value;
+    const gregorianDate = document.getElementById('modal-yah-date')?.value;
+    const memberId     = document.getElementById('modal-yah-member')?.value;
+
+    if (!deceasedName || !gregorianDate) {
+      showToast('Nombre y fecha son obligatorios', 'error');
+      return;
+    }
+
+    const yahrzeits = DataStore.getYahrzeits();
+    yahrzeits.push({ id: generateId(), deceasedName, hebrewName, relation, gregorianDate, memberId });
+    DataStore.saveYahrzeits(yahrzeits);
+    closeModal();
+    showToast('Yahrzeit agregado correctamente');
+    renderYahrzeitCards();
+  });
+}
+
+function deleteYahrzeit(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar este yahrzeit?')) return;
+  const yahrzeits = DataStore.getYahrzeits().filter(y => y.id !== id);
+  DataStore.saveYahrzeits(yahrzeits);
+  showToast('Yahrzeit eliminado', 'info');
+  renderYahrzeitCards();
+}
+
+
+// ------------------------------------------------------------
+// 9f. Communications
+// ------------------------------------------------------------
+function initCommunications() {
+  renderSentMessages();
+
+  const sendBtn = document.getElementById('btn-send-message');
+  if (sendBtn) {
+    sendBtn.addEventListener('click', () => {
+      const recipients = document.getElementById('comm-recipients')?.value.trim();
+      const subject    = document.getElementById('comm-subject')?.value.trim();
+      const body       = document.getElementById('comm-message')?.value.trim();
+
+      if (!recipients || !subject || !body) {
+        showToast('Por favor completa todos los campos', 'error');
+        return;
+      }
+
+      const messages = DataStore.getMessages();
+      messages.push({
+        id: generateId(),
+        recipients, subject, body,
+        sentAt: new Date().toISOString()
+      });
+      DataStore.saveMessages(messages);
+
+      // Clear form
+      const recipientsEl = document.getElementById('comm-recipients');
+      const subjectEl    = document.getElementById('comm-subject');
+      const messageEl    = document.getElementById('comm-message');
+      if (recipientsEl) recipientsEl.value = '';
+      if (subjectEl)    subjectEl.value = '';
+      if (messageEl)    messageEl.value = '';
+
+      showToast('Mensaje enviado correctamente');
+      renderSentMessages();
+    });
+  }
+}
+
+function renderSentMessages() {
+  const listEl = document.getElementById('sent-messages-list');
+  if (!listEl) return;
+
+  const messages = DataStore.getMessages();
+  if (messages.length === 0) {
+    listEl.innerHTML = '<p class="empty-text">No hay mensajes enviados.</p>';
+    return;
+  }
+
+  const sorted = [...messages].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+  listEl.innerHTML = sorted.map(m => `
+    <li class="list-item">
+      <div class="item-icon"><i class="ph ph-envelope"></i></div>
+      <div class="item-content">
+        <div class="item-title">${escapeHtml(m.subject)}</div>
+        <div class="item-desc"><i class="ph ph-users"></i> ${escapeHtml(m.recipients)}</div>
+      </div>
+      <div class="item-meta">
+        <div style="font-size:13px;">${formatDate(m.sentAt)}</div>
+      </div>
+    </li>`).join('');
+}
+
+
+// ------------------------------------------------------------
+// 9g. Kids (Parashat HaShavua para Niños)
+// ------------------------------------------------------------
+function initKids() {
+  const nameEl      = document.getElementById('kids-parasha-name');
+  const summaryEl   = document.getElementById('kids-parasha-summary');
+  const questionsEl = document.getElementById('kids-parasha-questions');
+  const activityEl  = document.getElementById('kids-parasha-activity');
+  const sendBtn     = document.getElementById('btn-send-kids');
+
+  // Default fallback
+  let matchedKey = 'Noach';
+
+  HebrewCalendar.getParasha().then(parasha => {
+    if (parasha) {
+      // Try to match parasha name against our keys
+      const parashaName = parasha.title;
+      const keys = Object.keys(PARASHOT_DATA);
+      const found = keys.find(k => parashaName.toLowerCase().includes(k.toLowerCase()));
+      if (found) matchedKey = found;
+
+      if (nameEl) nameEl.textContent = `Parashat ${parashaName}`;
+    } else {
+      if (nameEl) nameEl.textContent = `Parashat ${matchedKey}`;
+    }
+
+    renderKidsContent(matchedKey, summaryEl, questionsEl, activityEl);
+  }).catch(() => {
+    if (nameEl) nameEl.textContent = `Parashat ${matchedKey}`;
+    renderKidsContent(matchedKey, summaryEl, questionsEl, activityEl);
+  });
+
+  if (sendBtn) {
+    sendBtn.addEventListener('click', () => {
+      showToast('¡Contenido enviado a las familias con niños!', 'success');
+    });
+  }
+}
+
+function renderKidsContent(key, summaryEl, questionsEl, activityEl) {
+  const data = PARASHOT_DATA[key];
+  if (!data) return;
+
+  if (summaryEl) summaryEl.textContent = data.summary_kids;
+
+  if (questionsEl) {
+    questionsEl.innerHTML = data.questions.map((q, i) => `
+      <div class="kids-question">
+        <span class="kids-question-num">${i + 1}</span>
+        <span>${escapeHtml(q)}</span>
+      </div>`).join('');
+  }
+
+  if (activityEl) activityEl.textContent = data.activity;
 }
