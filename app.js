@@ -1535,7 +1535,23 @@ function renderKidsContent(key, summaryEl, questionsEl, activityEl) {
   // Render Parents Theater Script
   const scriptEl = document.getElementById('kids-parasha-script');
   if (scriptEl) {
-    const playData = PLAY_SCRIPTS[key] || PLAY_SCRIPT_FALLBACK;
+    let playData = PLAY_SCRIPTS[key];
+    if (!playData) {
+      const summaryText = data.summary_kids || '';
+      const activityText = data.activity || '';
+      const startText = summaryText ? (summaryText.charAt(0).toLowerCase() + summaryText.slice(1)) : '';
+      playData = {
+        cast: 'Narrador, Papá/Mamá Guía, Niño/a Preguntón/a',
+        dialogue: [
+          { p: 'Narrador', d: `La familia está sentada a la mesa de Shabat conversando sobre la Parashá ${key}.` },
+          { p: 'Niño/a', d: `¡Papá, Mamá! Cuéntenme, ¿de qué se trató la lectura de la Torá esta semana?` },
+          { p: 'Papá/Mamá', d: `¡Claro! Esta semana aprendimos que ${startText}` },
+          { p: 'Niño/a', d: `¡Qué gran enseñanza! ¿Y cómo podemos aplicarlo en nuestra vida diaria?` },
+          { p: 'Papá/Mamá', d: `Podemos empezar con la actividad de hoy: ${activityText}. ¡La haremos todos juntos!` },
+          { p: 'Narrador', d: `Todos sonríen, se dan un fuerte abrazo y dicen juntos: ¡Shabat Shalom!` }
+        ]
+      };
+    }
     const castHtml = `<p style="margin-bottom:8px; font-weight:600; color:var(--text-main);"><strong>Personajes:</strong> <span style="font-weight:normal; color:var(--text-muted);">${escapeHtml(playData.cast)}</span></p>`;
     const dialogueHtml = playData.dialogue.map(line => `
       <div style="margin-bottom:6px; font-size:13px; line-height:1.5;">
