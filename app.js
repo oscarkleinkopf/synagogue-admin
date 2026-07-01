@@ -24,6 +24,9 @@ const DataStore = {
   getTheme()      { return this._get('theme') || 'light'; },
   saveTheme(t)    { this._set('theme', t); },
 
+  getDismissedNotifications() { return this._get('dismissed_notifications') || []; },
+  saveDismissedNotifications(arr) { this._set('dismissed_notifications', arr); },
+
   isSeeded()      { return this._get('seeded') === true; },
   markSeeded()    { this._set('seeded', true); },
 
@@ -328,7 +331,7 @@ function initNotifications() {
   const badge = document.getElementById('notifications-badge');
   if (!btn || !badge) return;
 
-  const notifications = [];
+  const rawNotifications = [];
   const yahrzeits = DataStore.getYahrzeits();
   const members = DataStore.getMembers();
   
@@ -340,7 +343,7 @@ function initNotifications() {
   upcomingYahrzeits.forEach(y => {
     const sponsor = members.find(m => m.id === y.memberId);
     const sponsorName = sponsor ? `${sponsor.name} ${sponsor.family}` : 'Miembro';
-    notifications.push({
+    rawNotifications.push({
       id: `yahr_${y.id}`,
       type: 'yahrzeit',
       icon: 'ph-candle',
@@ -352,7 +355,7 @@ function initNotifications() {
 
   const today = new Date();
   if (today.getDay() === 5) {
-    notifications.push({
+    rawNotifications.push({
       id: 'shabbat_today',
       type: 'info',
       icon: 'ph-flame',
@@ -362,7 +365,7 @@ function initNotifications() {
     });
   }
 
-  notifications.push({
+  rawNotifications.push({
     id: 'welcome_note',
     type: 'info',
     icon: 'ph-info',
@@ -370,6 +373,11 @@ function initNotifications() {
     text: 'Se han integrado todas las 54 Parashot de la Torá y el módulo Shorashim de genealogía interactiva.',
     date: new Date().toISOString()
   });
+
+  // Filter out dismissed notifications
+  const dismissedIds = DataStore.getDismissedNotifications();
+  const notifications = rawNotifications.filter(n => !dismissedIds.includes(n.id));
+  window.currentActiveNotifications = notifications;
 
   const count = notifications.length;
   if (count > 0) {
@@ -379,7 +387,11 @@ function initNotifications() {
     badge.style.display = 'none';
   }
 
-  btn.addEventListener('click', () => {
+  // Clone button to clear previous click event listeners cleanly
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+
+  newBtn.addEventListener('click', () => {
     let html = '';
     if (notifications.length === 0) {
       html = '<p style="color:var(--text-muted); text-align:center; padding:16px;">No tienes notificaciones pendientes.</p>';
@@ -387,7 +399,7 @@ function initNotifications() {
       html = `
         <div style="display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; padding-right:4px;">
           ${notifications.map(n => `
-            <div style="display:flex; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-surface);">
+            <div style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-surface);">
               <div style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:rgba(212,175,55,0.1); color:var(--accent); flex-shrink:0;">
                 <i class="ph ${n.icon}" style="font-size:18px;"></i>
               </div>
@@ -396,8 +408,16 @@ function initNotifications() {
                 <p style="font-size:13px; margin:0 0 6px 0; color:var(--text-muted); line-height:1.4;">${n.text}</p>
                 <span style="font-size:11px; color:var(--accent); font-weight:500;">${n.type === 'yahrzeit' ? 'Urgente' : 'Informativo'}</span>
               </div>
+              <button class="btn-small-icon" style="flex-shrink:0; align-self:center;" title="Borrar" onclick="dismissNotification('${n.id}')">
+                <i class="ph ph-trash"></i>
+              </button>
             </div>
           `).join('')}
+        </div>
+        <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+          <button class="btn-secondary btn-sm" onclick="clearAllNotifications()" style="display:flex; align-items:center; gap:8px; width:100%; justify-content:center; padding:10px; border-color:var(--border-color);">
+            <i class="ph ph-trash"></i> Borrar todas las notificaciones
+          </button>
         </div>
       `;
     }
@@ -405,6 +425,30 @@ function initNotifications() {
     openModal('Centro de Notificaciones', html, null);
   });
 }
+
+// Global notification controllers
+window.dismissNotification = function(id) {
+  const dismissed = DataStore.getDismissedNotifications();
+  if (!dismissed.includes(id)) {
+    dismissed.push(id);
+    DataStore.saveDismissedNotifications(dismissed);
+  }
+  closeModal();
+  initNotifications();
+  showToast('Notificación borrada');
+};
+
+window.clearAllNotifications = function() {
+  const dismissed = DataStore.getDismissedNotifications();
+  const activeIds = (window.currentActiveNotifications || []).map(n => n.id);
+  activeIds.forEach(id => {
+    if (!dismissed.includes(id)) dismissed.push(id);
+  });
+  DataStore.saveDismissedNotifications(dismissed);
+  closeModal();
+  initNotifications();
+  showToast('Todas las notificaciones borradas');
+};
 
 
 // ------------------------------------------------------------
