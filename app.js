@@ -30,6 +30,29 @@ const DataStore = {
   getUsers()      { return this._get('users') || []; },
   saveUsers(u)    { this._set('users', u); },
 
+  getTasks()      { return this._get('tasks') || []; },
+  saveTasks(t)    { this._set('tasks', t); },
+
+  getLogs()       { return this._get('logs') || []; },
+  saveLogs(l)     { this._set('logs', l); },
+  addLog(action) {
+    const logs = this.getLogs();
+    const currentUser = this.getCurrentUser();
+    logs.unshift({
+      id: generateId(),
+      username: currentUser.username,
+      action: action,
+      timestamp: new Date().toISOString()
+    });
+    if (logs.length > 100) logs.pop();
+    this.saveLogs(logs);
+  },
+
+  getCurrentUser() { 
+    return this._get('current_user') || { id: 1, name: 'Oscar Admin', username: 'admin', role: 'Administrador', avatar: 'OA', status: 'active' }; 
+  },
+  setCurrentUser(u) { this._set('current_user', u); },
+
   isSeeded()      { return this._get('seeded') === true; },
   markSeeded()    { this._set('seeded', true); },
 
@@ -94,6 +117,15 @@ const DataStore = {
         { id: 3, name: 'Tesorero Levy', username: 'tesorero', role: 'Tesorero', email: 'finanzas@kehila.org', avatar: 'TL', status: 'active' }
       ];
       this.saveUsers(users);
+    }
+
+    if (!this._get('tasks')) {
+      const tasks = [
+        { id: generateId(), title: 'Llamar a David Cohen', description: 'Recordarle la conmemoración del Yahrzeit de su padre Abraham la próxima semana.', assignedTo: 'admin', dueDate: '2026-07-05', status: 'pending', createdAt: new Date().toISOString() },
+        { id: generateId(), title: 'Preparar sermón de Shabat', description: 'Tema: Enseñanzas éticas de la Parashá de la semana.', assignedTo: 'rabino', dueDate: '2026-07-03', status: 'pending', createdAt: new Date().toISOString() },
+        { id: generateId(), title: 'Conciliar cuentas de Kiddush', description: 'Revisar las transferencias recibidas para el Kiddush patrocinado de la semana pasada.', assignedTo: 'tesorero', dueDate: '2026-07-06', status: 'pending', createdAt: new Date().toISOString() }
+      ];
+      this.saveTasks(tasks);
     }
 
     this.markSeeded();
@@ -503,6 +535,12 @@ document.addEventListener('DOMContentLoaded', () => {
     globalNewRecordBtn.addEventListener('click', openGlobalNewRecordModal);
   }
 
+  updateActiveUserProfileDisplay();
+  const profileBtn = document.getElementById('current-user-profile');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', openSwitchUserModal);
+  }
+
   renderView(state.currentView);
 });
 
@@ -656,6 +694,14 @@ function initDashboard() {
         </div>
       </li>`).join('');
   }
+
+  // --- Tasks and Billing Alerts ---
+  const addTaskBtn = document.getElementById('btn-dashboard-add-task');
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', () => openDashboardAddTaskModal());
+  }
+  renderDashboardTasks();
+  renderBillingAlerts();
 }
 
 
@@ -739,6 +785,7 @@ function renderMembersTable() {
           </td>
           <td>
             <div class="action-buttons">
+              <button class="btn-small-icon" title="Copiar Datos de Contacto" onclick="copyMemberContact('${m.id}')"><i class="ph ph-copy"></i></button>
               <button class="btn-small-icon" title="Editar" onclick="openMemberModal('${m.id}')"><i class="ph ph-pencil-simple"></i></button>
               <button class="btn-small-icon" title="Eliminar" onclick="deleteMember('${m.id}')"><i class="ph ph-trash"></i></button>
             </div>
@@ -853,6 +900,7 @@ function openMemberModal(memberId) {
         }
 
         DataStore.saveMembers(all);
+        DataStore.addLog(`Actualizó el perfil del miembro ${name}`);
         showToast('Miembro actualizado correctamente');
       }
     } else {
@@ -871,6 +919,7 @@ function openMemberModal(memberId) {
         status: 'active', joinDate: new Date().toISOString().split('T')[0]
       });
       DataStore.saveMembers(all);
+      DataStore.addLog(`Agregó al nuevo miembro ${name}`);
       showToast('Miembro agregado correctamente');
     }
     closeModal();
@@ -879,9 +928,12 @@ function openMemberModal(memberId) {
 }
 
 function deleteMember(memberId) {
-  if (!confirm('¿Estás seguro de que deseas eliminar este miembro?')) return;
+  const toDelete = DataStore.getMembers().find(m => m.id === memberId);
+  const nameStr = toDelete ? toDelete.name : memberId;
+  if (!confirm(`¿Estás seguro de que deseas eliminar al miembro ${nameStr}?`)) return;
   const members = DataStore.getMembers().filter(m => m.id !== memberId);
   DataStore.saveMembers(members);
+  DataStore.addLog(`Eliminó al miembro ${nameStr}`);
   showToast('Miembro eliminado', 'info');
   renderMembersTable();
 }
@@ -998,16 +1050,19 @@ function renderTransactionsList(donations) {
     const typeIcons = { 'Donación': 'ph-gift', 'Cuota Mensual': 'ph-calendar-check', 'Promesa': 'ph-handshake', 'Kiddush': 'ph-wine' };
     const icon = typeIcons[d.type] || 'ph-currency-dollar';
     return `
-      <li class="list-item">
+      <li class="list-item" style="display:flex; align-items:center;">
         <div class="item-icon"><i class="ph ${icon}"></i></div>
-        <div class="item-content">
+        <div class="item-content" style="flex:1;">
           <div class="item-title">${escapeHtml(d.memberName)}</div>
           <div class="item-desc">${escapeHtml(d.type)}${d.notes ? ' — ' + escapeHtml(d.notes) : ''}</div>
         </div>
-        <div class="item-meta">
-          <div style="font-weight:600;font-size:14px;color:var(--color-primary)">${formatCurrency(d.amount)}</div>
-          <div style="font-size:12px;color:var(--text-secondary)">${formatDateShort(d.date)}</div>
+        <div class="item-meta" style="display:flex; flex-direction:column; align-items:flex-end;">
+          <div style="font-weight:600;font-size:14px;color:var(--text-main);">${formatCurrency(d.amount)}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${formatDateShort(d.date)}</div>
         </div>
+        <button class="btn-small-icon" onclick="copyThankYouTemplate('${d.id}')" title="Copiar Mensaje de Agradecimiento" style="margin-left:12px; cursor:pointer; padding:6px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-surface);">
+          <i class="ph ph-copy"></i>
+        </button>
       </li>`;
   }).join('');
 }
@@ -1066,6 +1121,7 @@ function openDonationModal() {
       amount, type, date, notes
     });
     DataStore.saveDonations(donations);
+    DataStore.addLog(`Registró una transacción de ${type} por $${amount} para ${member ? member.name : 'Desconocido'}`);
     closeModal();
     showToast('Donación registrada correctamente');
     initFinances();
@@ -1322,8 +1378,9 @@ function renderYahrzeitCards() {
           <div class="yahrzeit-detail"><strong>Fecha:</strong> ${formatDate(y.gregorianDate)}</div>
           ${member ? `<div class="yahrzeit-detail"><strong>Familia:</strong> ${escapeHtml(member.name)}</div>` : ''}
         </div>
-        <div class="yahrzeit-card-actions">
-          <button class="btn-small-icon" title="Eliminar" onclick="deleteYahrzeit('${y.id}')"><i class="ph ph-trash"></i></button>
+        <div class="yahrzeit-card-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+          <button class="btn-small-icon" title="Copiar Recordatorio de Yahrzeit" onclick="copyYahrzeitReminder('${y.id}')" style="cursor:pointer;"><i class="ph ph-copy"></i></button>
+          <button class="btn-small-icon" title="Eliminar" onclick="deleteYahrzeit('${y.id}')" style="cursor:pointer;"><i class="ph ph-trash"></i></button>
         </div>
       </div>`;
   }).join('');
@@ -1386,6 +1443,7 @@ function openYahrzeitModal() {
     const yahrzeits = DataStore.getYahrzeits();
     yahrzeits.push({ id: generateId(), deceasedName, hebrewName, relation, gregorianDate, memberId });
     DataStore.saveYahrzeits(yahrzeits);
+    DataStore.addLog(`Agregó el Yahrzeit de ${deceasedName}`);
     closeModal();
     showToast('Yahrzeit agregado correctamente');
     renderYahrzeitCards();
@@ -1393,9 +1451,12 @@ function openYahrzeitModal() {
 }
 
 function deleteYahrzeit(id) {
-  if (!confirm('¿Estás seguro de que deseas eliminar este yahrzeit?')) return;
+  const toDelete = DataStore.getYahrzeits().find(y => y.id === id);
+  const nameStr = toDelete ? toDelete.deceasedName : id;
+  if (!confirm(`¿Estás seguro de que deseas eliminar el Yahrzeit de ${nameStr}?`)) return;
   const yahrzeits = DataStore.getYahrzeits().filter(y => y.id !== id);
   DataStore.saveYahrzeits(yahrzeits);
+  DataStore.addLog(`Eliminó el Yahrzeit de ${nameStr}`);
   showToast('Yahrzeit eliminado', 'info');
   renderYahrzeitCards();
 }
@@ -2347,3 +2408,350 @@ window.saveUserProfile = function(id) {
   renderAdminUsers();
   showToast('Perfil de usuario guardado con éxito', 'success');
 };
+
+// ------------------------------------------------------------
+// Internal Admin - Active Session Display & Switching
+// ------------------------------------------------------------
+function updateActiveUserProfileDisplay() {
+  const user = DataStore.getCurrentUser();
+  const avatarEl = document.getElementById('current-user-avatar');
+  const nameEl = document.getElementById('current-user-name');
+  const roleEl = document.getElementById('current-user-role');
+  if (avatarEl) avatarEl.textContent = user.avatar || 'AD';
+  if (nameEl) nameEl.textContent = user.name || 'Admin';
+  if (roleEl) roleEl.textContent = user.role || 'Administrador';
+}
+
+function openSwitchUserModal() {
+  const users = DataStore.getUsers();
+  const bodyHtml = `
+    <div style="display:flex; flex-direction:column; gap:12px; padding: 8px 0;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Selecciona el perfil de usuario con el que deseas trabajar en esta sesión:</p>
+      <div style="display:flex; flex-direction:column; gap:8px; max-height: 300px; overflow-y: auto;">
+        ${users.map(u => `
+          <button class="btn-secondary" onclick="switchActiveUser(${u.id})" style="display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:12px 16px; justify-content:flex-start; border-radius:10px; cursor:pointer;">
+            <div style="width:32px; height:32px; border-radius:50%; background:rgba(212,175,55,0.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px; flex-shrink:0;">
+              ${escapeHtml(u.avatar)}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600; color:var(--text-main); font-size:13px;">${escapeHtml(u.name)}</div>
+              <div style="font-size:11px; color:var(--text-muted);">@${escapeHtml(u.username)} • ${escapeHtml(u.role)}</div>
+            </div>
+            <i class="ph ph-caret-right" style="color:var(--text-muted);"></i>
+          </button>
+        `).join('')}
+      </div>
+    </div>`;
+  openModal('Cambiar de Usuario Staff', bodyHtml, null);
+}
+
+window.switchActiveUser = function(userId) {
+  const user = DataStore.getUsers().find(u => u.id === userId);
+  if (user) {
+    DataStore.setCurrentUser(user);
+    DataStore.addLog(`Cambió de usuario activo a @${user.username}`);
+    updateActiveUserProfileDisplay();
+    closeModal();
+    showToast(`Sesión activa: @${user.username}`);
+    renderView(state.currentView);
+  }
+};
+
+// ------------------------------------------------------------
+// Internal Admin - Tasks Management
+// ------------------------------------------------------------
+function renderDashboardTasks() {
+  const listEl = document.getElementById('dashboard-tasks-list');
+  if (!listEl) return;
+
+  const currentUser = DataStore.getCurrentUser();
+  const allTasks = DataStore.getTasks();
+  const myTasks = allTasks.filter(t => t.assignedTo === currentUser.username && t.status === 'pending');
+
+  if (myTasks.length === 0) {
+    listEl.innerHTML = `
+      <li style="display:flex; flex-direction:column; align-items:center; padding:24px 16px; text-align:center; color:var(--text-muted); gap:8px;">
+        <i class="ph ph-checks" style="font-size:32px; color:var(--success);"></i>
+        <div style="font-size:13px; font-weight:500;">¡Al día! No tienes tareas pendientes.</div>
+      </li>`;
+    return;
+  }
+
+  listEl.innerHTML = myTasks.map(t => `
+    <li class="list-item" style="padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-surface); display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <button onclick="completeDashboardTask('${t.id}')" title="Marcar como Completada" style="border:1px solid var(--border-color); width:20px; height:20px; border-radius:50%; background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--success); flex-shrink:0;">
+        <i class="ph ph-check" style="font-size:12px; opacity:0; hover:opacity:1;"></i>
+      </button>
+      <div style="flex:1;">
+        <div style="font-weight:600; font-size:13px; color:var(--text-main);">${escapeHtml(t.title)}</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHtml(t.description)}</div>
+      </div>
+      <div style="font-size:11px; font-weight:600; color:var(--danger); background:rgba(239,68,68,0.05); padding:4px 8px; border-radius:8px; flex-shrink:0;">
+        Vence: ${formatDateShort(t.dueDate)}
+      </div>
+    </li>
+  `).join('');
+}
+
+function openDashboardAddTaskModal() {
+  const users = DataStore.getUsers();
+  const userOptions = users.map(u => `<option value="${u.username}">@${escapeHtml(u.username)} (${escapeHtml(u.role)})</option>`).join('');
+
+  const bodyHtml = `
+    <form id="form-add-task" onsubmit="event.preventDefault(); saveDashboardTask();" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+      <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-weight:600; color:var(--text-main); font-size:13px;">Título de la Tarea</label>
+        <input type="text" class="text-input" id="task-title-input" required placeholder="Ej: Llamar a la familia Stern" style="width:100%;">
+      </div>
+      <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-weight:600; color:var(--text-main); font-size:13px;">Descripción / Notas</label>
+        <textarea class="text-input" id="task-desc-input" rows="3" placeholder="Detalles de la tarea..." style="width:100%; height:auto; resize:vertical; font-family:inherit; padding:10px;"></textarea>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-weight:600; color:var(--text-main); font-size:13px;">Asignar a</label>
+          <select class="select-input" id="task-assignee-select" style="width:100%;">${userOptions}</select>
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-weight:600; color:var(--text-main); font-size:13px;">Fecha Límite</label>
+          <input type="date" class="text-input" id="task-due-input" required style="width:100%;">
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:12px; justify-content:flex-end;">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-primary">Crear Tarea</button>
+      </div>
+    </form>`;
+
+  openModal('Nueva Tarea Interna', bodyHtml, null);
+  
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dueInput = document.getElementById('task-due-input');
+  if (dueInput) dueInput.value = tomorrow.toISOString().split('T')[0];
+}
+
+window.saveDashboardTask = function() {
+  const title = document.getElementById('task-title-input').value.trim();
+  const description = document.getElementById('task-desc-input').value.trim();
+  const assignedTo = document.getElementById('task-assignee-select').value;
+  const dueDate = document.getElementById('task-due-input').value;
+
+  if (!title || !dueDate) {
+    showToast('Por favor, completa los campos requeridos', 'warning');
+    return;
+  }
+
+  const tasks = DataStore.getTasks();
+  tasks.push({
+    id: generateId(),
+    title,
+    description,
+    assignedTo,
+    dueDate,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  });
+
+  DataStore.saveTasks(tasks);
+  DataStore.addLog(`Asignó la tarea "${title}" a @${assignedTo}`);
+  closeModal();
+  renderDashboardTasks();
+  showToast('Tarea interna creada y asignada', 'success');
+};
+
+window.completeDashboardTask = function(taskId) {
+  const tasks = DataStore.getTasks();
+  const t = tasks.find(x => x.id === taskId);
+  if (t) {
+    t.status = 'completed';
+    DataStore.saveTasks(tasks);
+    DataStore.addLog(`Completó la tarea "${t.title}"`);
+    renderDashboardTasks();
+    showToast('¡Tarea completada! Buen trabajo', 'success');
+  }
+};
+
+// ------------------------------------------------------------
+// Internal Admin - Billing Alerts (Cuotas Vencidas)
+// ------------------------------------------------------------
+function renderBillingAlerts() {
+  const alertsEl = document.getElementById('dashboard-billing-alerts');
+  if (!alertsEl) return;
+
+  const members = DataStore.getMembers().filter(m => m.status === 'active');
+  const donations = DataStore.getDonations();
+  const currentYear = new Date().getFullYear();
+
+  const paidMemberIds = new Set(
+    donations
+      .filter(d => d.type === 'Cuota Mensual' && new Date(d.date).getFullYear() === currentYear)
+      .map(d => d.memberId)
+  );
+
+  const unpaidMembers = members.filter(m => !paidMemberIds.has(m.id));
+
+  if (unpaidMembers.length === 0) {
+    alertsEl.innerHTML = `
+      <div style="background:rgba(34,197,94,0.05); border:1px solid rgba(34,197,94,0.2); border-radius:12px; padding:16px; text-align:center; color:#166534; font-size:13px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <i class="ph ph-check-circle" style="font-size:20px;"></i>
+        <span>Todas las familias activas están al día con sus cuotas de ${currentYear}.</span>
+      </div>`;
+    return;
+  }
+
+  alertsEl.innerHTML = `
+    <div style="background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2); border-radius:12px; padding:14px; color:#991B1B; font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <i class="ph ph-warning-circle" style="font-size:18px; color:var(--danger);"></i>
+      <span>Se detectaron ${unpaidMembers.length} familias con cuotas de ${currentYear} pendientes.</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding-right:4px;">
+      ${unpaidMembers.map(m => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-surface);">
+          <div>
+            <div style="font-weight:600; font-size:12px; color:var(--text-main);">${escapeHtml(m.name)}</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">${escapeHtml(m.phone || 'Sin teléfono')}</div>
+          </div>
+          <button class="btn-secondary" onclick="copyBillingReminderTemplate('${m.id}')" title="Copiar Mensaje de Cobro" style="padding:6px; font-size:11px; display:flex; align-items:center; gap:4px; height:auto; width:auto; border-radius:8px; cursor:pointer; border-color:var(--border-color);">
+            <i class="ph ph-copy" style="font-size:13px;"></i> Recordatorio
+          </button>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+// ------------------------------------------------------------
+// Internal Admin - Message Templates Copy Helpers
+// ------------------------------------------------------------
+window.copyMemberContact = function(memberId) {
+  const m = DataStore.getMembers().find(x => x.id === memberId);
+  if (!m) return;
+
+  const text = `Ficha de Contacto - Kehilá:\nNombre: ${m.name}\nFamilia: ${m.family}\nTeléfono: ${m.phone || 'N/A'}\nEmail: ${m.email || 'N/A'}\nEstado: ${m.status === 'active' ? 'Activo' : 'Inactivo'}`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Datos de contacto copiados al portapapeles');
+  });
+};
+
+window.copyThankYouTemplate = function(donationId) {
+  const d = DataStore.getDonations().find(x => x.id === donationId);
+  if (!d) return;
+
+  const text = `Estimado/a ${d.memberName},\n\nLe escribimos en nombre de la administración de la Kehilá para expresarle nuestro más sincero agradecimiento por su contribución de ${formatCurrency(d.amount)} en concepto de "${d.type}"${d.notes ? ' (' + d.notes + ')' : ''} registrada el ${formatDate(d.date)}.\n\nSu generoso apoyo nos ayuda a continuar fortaleciendo la vida comunitaria y espiritual de nuestra congregación.\n\nQue reciba abundantes bendiciones. ¡Shabat Shalom!\n\nAtentamente,\nStaff de KehiláAdmin`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Mensaje de agradecimiento copiado');
+  });
+};
+
+window.copyYahrzeitReminder = function(yahrzeitId) {
+  const y = DataStore.getYahrzeits().find(x => x.id === yahrzeitId);
+  const m = DataStore.getMembers().find(x => x.id === y.memberId);
+  if (!y) return;
+
+  const text = `Estimado/a ${m ? m.name : 'miembro de la comunidad'},\n\nLe escribimos de parte de la Kehilá para recordarle que el próximo ${formatDate(y.gregorianDate)} se conmemora el Yahrzeit de su recordado/a ${y.relation.toLowerCase()}, ${y.deceasedName} (${y.hebrewName || 'Z"L'}).\n\nLe recordamos la importancia de encender la vela de Yahrzeit la víspera de esta fecha al atardecer y rezar en su memoria. Si lo desea, puede asistir a los rezos del Minyán en la sinagoga para recitar el Kadish.\n\nQue su alma repose en paz y su memoria sea para bendición.\n\nAtentamente,\nStaff de KehiláAdmin`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Recordatorio de Yahrzeit copiado');
+  });
+};
+
+window.copyBillingReminderTemplate = function(memberId) {
+  const m = DataStore.getMembers().find(x => x.id === memberId);
+  if (!m) return;
+
+  const currentYear = new Date().getFullYear();
+  const text = `Estimado/a ${m.name},\n\nEsperamos que se encuentre muy bien.\n\nLe escribimos de forma cordial desde el área de Tesorería de la Kehilá para comentarle que no registramos su aportación correspondiente a la Cuota Mensual/Anual de Membresía del año ${currentYear}.\n\nPara nosotros es de suma importancia contar con su apoyo regular para poder mantener los servicios, el templo y las actividades educativas de nuestra hermosa comunidad.\n\nSi ya realizó su depósito, le agradeceríamos nos envíe el comprobante de pago para actualizar nuestros registros. De lo contrario, quedamos a su entera disposición para coordinar el pago.\n\nMuchas gracias por su compromiso y apoyo constante.\n\nAtentamente,\nÁrea de Tesorería - KehiláAdmin`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Recordatorio de cobro copiado');
+  });
+};
+
+// ------------------------------------------------------------
+// Internal Admin - Pestañas y Auditoría de Actividad
+// ------------------------------------------------------------
+window.switchAdminTab = function(tabName) {
+  const usersTab = document.getElementById('admin-users-tab-content');
+  const logsTab = document.getElementById('admin-logs-tab-content');
+  const usersBtn = document.getElementById('tab-btn-users');
+  const logsBtn = document.getElementById('tab-btn-logs');
+  const addUserBtn = document.getElementById('btn-add-user');
+
+  if (!usersTab || !logsTab || !usersBtn || !logsBtn) return;
+
+  if (tabName === 'users') {
+    usersTab.style.display = 'block';
+    logsTab.style.display = 'none';
+    if (addUserBtn) addUserBtn.style.display = 'block';
+
+    usersBtn.classList.add('active');
+    usersBtn.style.color = 'var(--accent)';
+    usersBtn.style.borderBottom = '3px solid var(--accent)';
+
+    logsBtn.classList.remove('active');
+    logsBtn.style.color = 'var(--text-muted)';
+    logsBtn.style.borderBottom = '3px solid transparent';
+    
+    renderAdminUsers();
+  } else {
+    usersTab.style.display = 'none';
+    logsTab.style.display = 'block';
+    if (addUserBtn) addUserBtn.style.display = 'none';
+
+    logsBtn.classList.add('active');
+    logsBtn.style.color = 'var(--accent)';
+    logsBtn.style.borderBottom = '3px solid var(--accent)';
+
+    usersBtn.classList.remove('active');
+    usersBtn.style.color = 'var(--text-muted)';
+    usersBtn.style.borderBottom = '3px solid transparent';
+    
+    renderAdminLogs();
+  }
+};
+
+function renderAdminLogs() {
+  const tbody = document.getElementById('admin-logs-table-body');
+  const clearBtn = document.getElementById('btn-clear-logs');
+  if (!tbody) return;
+
+  if (clearBtn && !clearBtn.hasListener) {
+    clearBtn.addEventListener('click', () => clearAdminLogs());
+    clearBtn.hasListener = true;
+  }
+
+  const logs = DataStore.getLogs();
+  if (logs.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No hay registros de actividad recientes.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(log => {
+    const dateObj = new Date(log.timestamp);
+    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + dateObj.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+    
+    return `
+      <tr>
+        <td style="font-size:12px; color:var(--text-muted); white-space:nowrap; vertical-align:top; font-weight:500;">
+          ${timeStr}
+        </td>
+        <td style="font-weight:600; font-size:13px; color:var(--text-main); vertical-align:top; white-space:nowrap;">
+          @${escapeHtml(log.username)}
+        </td>
+        <td style="font-size:13px; color:var(--text-muted); line-height:1.4;">
+          ${escapeHtml(log.action)}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function clearAdminLogs() {
+  if (confirm('¿Estás seguro de que deseas limpiar el historial de auditoría? Esta acción no afectará a los miembros ni a las finanzas.')) {
+    DataStore.saveLogs([]);
+    renderAdminLogs();
+    showToast('Historial de actividad limpiado');
+  }
+}

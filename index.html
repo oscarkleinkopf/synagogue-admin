@@ -62,11 +62,11 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div class="user-profile">
-                    <div class="avatar">AD</div>
+                <div class="user-profile" id="current-user-profile" style="cursor:pointer;" title="Cambiar de usuario">
+                    <div class="avatar" id="current-user-avatar">AD</div>
                     <div class="user-info">
-                        <span class="user-name">Admin</span>
-                        <span class="user-role">Administrador</span>
+                        <span class="user-name" id="current-user-name">Admin</span>
+                        <span class="user-role" id="current-user-role">Administrador</span>
                     </div>
                 </div>
             </div>
@@ -145,6 +145,24 @@
             <div class="card">
                 <div class="card-header"><h3>Próximos Servicios</h3></div>
                 <div class="card-body"><ul class="list-group" id="services-list"></ul></div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" style="margin-top: 24px;">
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Mis Pendientes (Tareas)</h3>
+                    <button class="btn-primary" id="btn-dashboard-add-task" style="padding: 6px 12px; font-size: 12px; gap:4px; height:auto; width:auto;"><i class="ph ph-plus" style="font-size:14px;"></i> Nueva Tarea</button>
+                </div>
+                <div class="card-body" style="padding: 16px;">
+                    <ul class="list-group" id="dashboard-tasks-list" style="display:flex; flex-direction:column; gap:10px; margin:0; padding:0;"></ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Alertas de Cobranza</h3></div>
+                <div class="card-body" style="padding: 20px 24px;">
+                    <div id="dashboard-billing-alerts" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
             </div>
         </div>
     </template>
@@ -508,7 +526,7 @@
 
     <!-- Admin / Perfiles View -->
     <template id="view-admin">
-        <div class="view-header flex-between">
+        <div class="view-header flex-between" style="margin-bottom:16px;">
             <div>
                 <h2 class="view-title">Admin / Perfiles</h2>
                 <p class="view-subtitle">Gestiona las cuentas de usuario y niveles de acceso al sistema</p>
@@ -517,7 +535,17 @@
                 <button class="btn-primary" id="btn-add-user"><i class="ph ph-plus"></i> Nuevo Usuario</button>
             </div>
         </div>
-        <div class="card">
+
+        <div style="display:flex; gap:16px; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:0;">
+            <button class="btn-link admin-tab-btn active" id="tab-btn-users" onclick="switchAdminTab('users')" style="font-weight:600; color:var(--accent); text-decoration:none; padding:8px 4px 12px 4px; border-bottom:3px solid var(--accent); border-radius:0; font-size:14px; display:flex; align-items:center; gap:8px;">
+                <i class="ph ph-users" style="font-size:18px;"></i> Perfiles de Usuario
+            </button>
+            <button class="btn-link admin-tab-btn" id="tab-btn-logs" onclick="switchAdminTab('logs')" style="font-weight:600; color:var(--text-muted); text-decoration:none; padding:8px 4px 12px 4px; border-bottom:3px solid transparent; border-radius:0; font-size:14px; display:flex; align-items:center; gap:8px;">
+                <i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> Registro de Actividad
+            </button>
+        </div>
+
+        <div class="card" id="admin-users-tab-content">
             <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin: 0;">Usuarios Registrados</h3>
                 <span class="member-count" id="admin-user-count" style="font-size: 13px; color: var(--text-muted);"></span>
@@ -535,6 +563,27 @@
                         </tr>
                     </thead>
                     <tbody id="admin-users-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" id="admin-logs-tab-content" style="display:none;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin: 0;">Registro de Actividad Reciente</h3>
+                <button class="btn-secondary btn-sm" id="btn-clear-logs" style="padding:6px 12px; font-size:12px; gap:4px; height:auto; width:auto; border-color:var(--border-color);"><i class="ph ph-trash" style="font-size:14px;"></i> Limpiar Registro</button>
+            </div>
+            <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">Hora / Fecha</th>
+                            <th style="width: 150px;">Usuario</th>
+                            <th>Acción Realizada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-logs-table-body">
                         <!-- Populated by JS -->
                     </tbody>
                 </table>
