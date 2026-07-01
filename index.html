@@ -55,6 +55,10 @@
                     <i class="ph ph-star-four" style="color:var(--accent)"></i>
                     <span style="font-weight:600">Shabat Infantil</span>
                 </a>
+                <a href="#" class="nav-item" data-view="admin">
+                    <i class="ph ph-gear"></i>
+                    <span>Admin / Perfiles</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -498,6 +502,42 @@
                         </p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Admin / Perfiles View -->
+    <template id="view-admin">
+        <div class="view-header flex-between">
+            <div>
+                <h2 class="view-title">Admin / Perfiles</h2>
+                <p class="view-subtitle">Gestiona las cuentas de usuario y niveles de acceso al sistema</p>
+            </div>
+            <div>
+                <button class="btn-primary" id="btn-add-user"><i class="ph ph-plus"></i> Nuevo Usuario</button>
+            </div>
+        </div>
+        <div class="card">
+            <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin: 0;">Usuarios Registrados</h3>
+                <span class="member-count" id="admin-user-count" style="font-size: 13px; color: var(--text-muted);"></span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                            <th>Rol / Cargo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </template>

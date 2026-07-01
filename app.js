@@ -27,6 +27,9 @@ const DataStore = {
   getDismissedNotifications() { return this._get('dismissed_notifications') || []; },
   saveDismissedNotifications(arr) { this._set('dismissed_notifications', arr); },
 
+  getUsers()      { return this._get('users') || []; },
+  saveUsers(u)    { this._set('users', u); },
+
   isSeeded()      { return this._get('seeded') === true; },
   markSeeded()    { this._set('seeded', true); },
 
@@ -83,6 +86,15 @@ const DataStore = {
       { id: generateId(), recipients: 'Familias con niños',  subject: 'Campamento de Verano 2026', body: 'Nos complace anunciar el campamento de verano para niños de 6 a 12 años. Inscripciones abiertas hasta el 15 de julio.',    sentAt: '2026-06-10T14:00:00' }
     ];
     this.saveMessages(messages);
+
+    if (!this._get('users')) {
+      const users = [
+        { id: 1, name: 'Oscar Admin', username: 'admin', role: 'Administrador', email: 'admin@kehila.org', avatar: 'OA', status: 'active' },
+        { id: 2, name: 'Rabino Goldstein', username: 'rabino', role: 'Rabino / Educador', email: 'rabino@kehila.org', avatar: 'RG', status: 'active' },
+        { id: 3, name: 'Tesorero Levy', username: 'tesorero', role: 'Tesorero', email: 'finanzas@kehila.org', avatar: 'TL', status: 'active' }
+      ];
+      this.saveUsers(users);
+    }
 
     this.markSeeded();
   }
@@ -519,7 +531,8 @@ function renderView(viewName) {
         yahrzeits:       initYahrzeits,
         communications:  initCommunications,
         kids:            initKids,
-        shorashim:       initShorashim
+        shorashim:       initShorashim,
+        admin:           initAdmin
       };
 
       if (initializers[viewName]) initializers[viewName]();
@@ -2162,4 +2175,175 @@ window.triggerGlobalNewRecord = function(type) {
       openYahrzeitModal();
     }
   }, 100);
+};
+
+// ------------------------------------------------------------
+// Admin / User Profiles Management
+// ------------------------------------------------------------
+function initAdmin() {
+  const addUserBtn = document.getElementById('btn-add-user');
+  if (addUserBtn) {
+    addUserBtn.addEventListener('click', () => openUserModal());
+  }
+  renderAdminUsers();
+}
+
+function renderAdminUsers() {
+  const tableBody = document.getElementById('admin-users-table-body');
+  const countEl = document.getElementById('admin-user-count');
+  if (!tableBody) return;
+
+  const users = DataStore.getUsers();
+  if (countEl) countEl.textContent = `${users.length} ${users.length === 1 ? 'usuario' : 'usuarios'}`;
+
+  if (users.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted);">
+          No hay perfiles de usuario registrados.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = users.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="avatar-sm" style="background:rgba(212,175,55,0.1); color:var(--accent); font-weight:600; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;">
+            ${escapeHtml(u.avatar)}
+          </div>
+          <span style="font-weight:600; color:var(--text-main);">@${escapeHtml(u.username)}</span>
+        </div>
+      </td>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>
+        <span class="badge" style="background:var(--bg-main); border:1px solid var(--border-color); color:var(--text-main); font-size:11px; padding:4px 8px; border-radius:8px; font-weight:500;">
+          ${escapeHtml(u.role)}
+        </span>
+      </td>
+      <td>
+        <span class="badge ${u.status === 'active' ? 'status-active' : 'status-inactive'}">
+          ${u.status === 'active' ? 'Activo' : 'Inactivo'}
+        </span>
+      </td>
+      <td>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-icon-sm" onclick="editUserProfile(${u.id})" title="Editar" style="padding:6px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-surface); cursor:pointer;">
+            <i class="ph ph-pencil"></i>
+          </button>
+          <button class="btn-icon-sm btn-delete" onclick="deleteUserProfile(${u.id})" title="Borrar" style="padding:6px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-surface); color:var(--danger); cursor:pointer;">
+            <i class="ph ph-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.editUserProfile = function(id) {
+  openUserModal(id);
+};
+
+window.deleteUserProfile = function(id) {
+  const users = DataStore.getUsers();
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+
+  if (confirm(`¿Estás seguro de que deseas eliminar el perfil del usuario @${u.username}?`)) {
+    const updated = users.filter(x => x.id !== id);
+    DataStore.saveUsers(updated);
+    renderAdminUsers();
+    showToast('Perfil de usuario eliminado', 'success');
+  }
+};
+
+function openUserModal(userId = null) {
+  let user = null;
+  if (userId !== null) {
+    user = DataStore.getUsers().find(u => u.id === userId);
+  }
+
+  const title = user ? 'Editar Perfil de Usuario' : 'Nuevo Perfil de Usuario';
+  const bodyHtml = `
+    <form id="form-user-profile" onsubmit="event.preventDefault(); saveUserProfile(${user ? user.id : 'null'});" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+      <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-weight:600; color:var(--text-main); font-size:13px;">Nombre Completo</label>
+        <input type="text" class="text-input" id="user-name-input" value="${user ? escapeHtml(user.name) : ''}" required style="width:100%;">
+      </div>
+      <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-weight:600; color:var(--text-main); font-size:13px;">Nombre de Usuario</label>
+        <div style="position:relative; display:flex; align-items:center;">
+          <span style="position:absolute; left:12px; color:var(--text-muted); font-weight:600; font-size:14px;">@</span>
+          <input type="text" class="text-input" id="user-username-input" value="${user ? escapeHtml(user.username) : ''}" required style="width:100%; padding-left:26px;" placeholder="ejemplo">
+        </div>
+      </div>
+      <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-weight:600; color:var(--text-main); font-size:13px;">Correo Electrónico</label>
+        <input type="email" class="text-input" id="user-email-input" value="${user ? escapeHtml(user.email) : ''}" required style="width:100%;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-weight:600; color:var(--text-main); font-size:13px;">Rol / Cargo</label>
+          <select class="select-input" id="user-role-select" style="width:100%;">
+            <option value="Administrador" ${user && user.role === 'Administrador' ? 'selected' : ''}>Administrador</option>
+            <option value="Rabino / Educador" ${user && user.role === 'Rabino / Educador' ? 'selected' : ''}>Rabino / Educador</option>
+            <option value="Tesorero" ${user && user.role === 'Tesorero' ? 'selected' : ''}>Tesorero</option>
+            <option value="Voluntario" ${user && user.role === 'Voluntario' ? 'selected' : ''}>Voluntario</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-weight:600; color:var(--text-main); font-size:13px;">Estado</label>
+          <select class="select-input" id="user-status-select" style="width:100%;">
+            <option value="active" ${user && user.status === 'active' ? 'selected' : ''}>Activo</option>
+            <option value="inactive" ${user && user.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:12px; justify-content:flex-end;">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-primary">Guardar Perfil</button>
+      </div>
+    </form>`;
+
+  openModal(title, bodyHtml, null);
+}
+
+window.saveUserProfile = function(id) {
+  const name = document.getElementById('user-name-input').value.trim();
+  const username = document.getElementById('user-username-input').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const email = document.getElementById('user-email-input').value.trim();
+  const role = document.getElementById('user-role-select').value;
+  const status = document.getElementById('user-status-select').value;
+
+  if (!name || !username || !email) {
+    showToast('Por favor, completa todos los campos requeridos', 'warning');
+    return;
+  }
+
+  const users = DataStore.getUsers();
+
+  const exists = users.find(u => u.username === username && u.id !== id);
+  if (exists) {
+    showToast('El nombre de usuario ya está en uso', 'warning');
+    return;
+  }
+
+  const initials = name.split(' ').filter(Boolean).map(x => x[0]).join('').substring(0, 2).toUpperCase() || 'US';
+
+  if (id !== null) {
+    const idx = users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], name, username, email, role, status, avatar: initials };
+    }
+  } else {
+    const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+    users.push({ id: newId, name, username, email, role, status, avatar: initials });
+  }
+
+  DataStore.saveUsers(users);
+  closeModal();
+  renderAdminUsers();
+  showToast('Perfil de usuario guardado con éxito', 'success');
 };
