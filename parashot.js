@@ -294,22 +294,22 @@ const PARASHOT_DATA = {
     summary_kids: 'Se organiza un censo y las hijas de Tzlofjad reclaman con valentía heredar la tierra de su padre. Moshé consulta a Dios, quien le da la razón, estableciendo derechos justos para las mujeres.',
     questions: ['¿Por qué las hijas de Tzlofjad fueron valientes al hablar?', '¿Qué significa ser justos con todos por igual?', '¿Cómo defiendes tú lo que crees que es correcto?'],
     activity: '¡Dibuja a cinco hermanas sonrientes tomadas de la mano!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/pinchas_illustration.jpg',
+    coloring: 'images/pinchas_coloring.jpg'
   },
   'Matot': {
     summary_kids: 'Moshé enseña sobre la importancia de cumplir las promesas y mantener la palabra empeñada. Las tribus de Reubén y Gad piden cuidar sus ganados en verdes praderas comprometiéndose a ayudar al resto.',
     questions: ['¿Por qué es tan importante cumplir cuando prometes algo?', '¿Qué se siente cuando alguien no cumple su palabra?', '¿Cómo podemos ser confiables para los demás?'],
     activity: '¡Dibuja a un pastor cuidando ovejas en una colina verde!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/matot_illustration.jpg',
+    coloring: 'images/matot_coloring.jpg'
   },
   'Masei': {
     summary_kids: 'Se repasan los 42 viajes del pueblo de Israel por el desierto, desde la salida de Egipto hasta las orillas del río Jordán, recordando que el camino recorrido nos hace sabios.',
     questions: ['¿Qué viaje recuerdas con más cariño?', '¿Qué aprendiste en tu última aventura o paseo?', '¿Por qué es bueno recordar el camino que hemos recorrido en la vida?'],
     activity: '¡Dibuja un mapa con caminos, desiertos y montañas!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/masei_illustration.jpg',
+    coloring: 'images/masei_coloring.jpg'
   },
 
   // --- DEVARIM (DEUTERONOMIO) ---
@@ -317,43 +317,43 @@ const PARASHOT_DATA = {
     summary_kids: 'Moshé reúne al pueblo antes de cruzar a la Tierra Prometida y comienza su gran discurso, recordando con cariño todas las lecciones del desierto y animándolos a ser una comunidad justa.',
     questions: ['¿Qué lecciones te gustaría enseñar a niños más pequeños?', '¿Por qué los discursos y palabras de despedida son especiales?', '¿Qué significa avanzar hacia una meta con ilusión?'],
     activity: '¡Dibuja a Moshé hablando ante todo el pueblo reunido!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/devarim_illustration.jpg',
+    coloring: 'images/devarim_coloring.jpg'
   },
   'Va\'etchanan': {
     summary_kids: 'Moshé enseña el *Shemá Israel* ("Escucha Israel, Dios es Uno"), la oración más importante del judaísmo. Pide amar a Dios con todo el corazón, enseñar la Torá a los hijos y colocar la Mezuzá en las puertas.',
     questions: ['¿Cuándo rezas o piensas en el Shemá en tu rutina diaria?', '¿Qué hay dentro de una Mezuzá y por qué la tocamos al entrar?', '¿Cómo demuestras amor por las tradiciones de tu familia?'],
     activity: '¡Dibuja una hermosa Mezuzá con la letra hebrea Shin!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/vaetchanan_illustration.jpg',
+    coloring: 'images/vaetchanan_coloring.jpg'
   },
   'Eikev': {
     summary_kids: 'Moshé describe la belleza de Israel, una tierra bendecida con trigo, cebada, uvas, higos, granadas, aceitunas y dátiles (las siete especies). Nos enseña a agradecer después de comer (*Birkat Hamazón*).',
     questions: ['¿Cuál de los siete frutos de Israel te gusta comer más?', '¿Por qué daremos gracias después de comer en lugar de solo antes?', '¿Cómo te sientes después de compartir una buena comida en Shabat?'],
     activity: '¡Dibuja una canasta llena de granadas, higos y uvas!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/eikev_illustration.jpg',
+    coloring: 'images/eikev_coloring.jpg'
   },
   'Re\'eh': {
     summary_kids: 'Moshé pone ante el pueblo la bendición si siguen la justicia y la ética. Enseña a ser generosos abriendo la mano a los necesitados y a celebrar las tres fiestas de peregrinación con gran alegría comunitaria.',
     questions: ['¿Cómo podemos "abrir la mano" y compartir con alguien necesitado hoy?', '¿Qué te da más alegría de celebrar las fiestas de la sinagoga?', '¿Qué significa tener un corazón generoso?'],
     activity: '¡Dibuja una mano abierta entregando tzedaká (monedas de caridad) a otra!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/reeh_illustration.jpg',
+    coloring: 'images/reeh_coloring.jpg'
   },
   'Shoftim': {
     summary_kids: 'Moshé instruye establecer jueces justos y honestos bajo el principio de "Justicia, justicia perseguirás". También nos enseña a cuidar la naturaleza, prohibiendo talar árboles frutales incluso en tiempos difíciles.',
     questions: ['¿Por qué es importante que las reglas se apliquen de forma justa para todos?', '¿Cómo defiendes a alguien cuando ves que lo tratan de forma injusta?', '¿Por qué debemos proteger los árboles frutales y las plantas?'],
     activity: '¡Dibuja un árbol cargado de manzanas rojas y una balanza de justicia!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/shoftim_illustration.jpg',
+    coloring: 'images/shoftim_coloring.jpg'
   },
   'Ki Teitzei': {
     summary_kids: 'Esta semana se enseñan muchas leyes cotidianas de bondad: devolver los objetos perdidos a sus dueños, ayudar a descargar un animal cansado y construir una baranda de seguridad en los techos de las casas para evitar accidentes.',
     questions: ['¿Qué haces cuando encuentras algo en el patio de la escuela que no es tuyo?', '¿Cómo podemos cuidar la seguridad física en nuestras casas y escuelas?', '¿Cómo podemos ayudar a un amigo que está cansado o abrumado?'],
     activity: '¡Dibuja a un niño devolviendo un juguete perdido a su dueño sonriente!',
-    illustration: 'images/torah_illustration.jpg',
-    coloring: 'images/torah_coloring.jpg'
+    illustration: 'images/kiteitzei_illustration.jpg',
+    coloring: 'images/kiteitzei_coloring.jpg'
   },
   'Ki Tavo': {
     summary_kids: 'Moshé enseña a llevar las primeras frutas de la cosecha (*Bicurim*) en canastas al templo con alegría y gratitud. Dios le recuerda al pueblo que son especiales y que siempre deben vivir con regocijo por el bien recibido.',
