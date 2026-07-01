@@ -53,6 +53,9 @@ const DataStore = {
   },
   setCurrentUser(u) { this._set('current_user', u); },
 
+  getCustomEvents() { return this._get('custom_events') || []; },
+  saveCustomEvents(e) { this._set('custom_events', e); },
+
   isSeeded()      { return this._get('seeded') === true; },
   markSeeded()    { this._set('seeded', true); },
 
@@ -301,6 +304,29 @@ function closeModal() {
   }
 }
 
+function confirmModal(title, message, onConfirm) {
+  const bodyHtml = `
+    <div style="text-align:center; padding:8px 0;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <i class="ph ph-warning" style="font-size:28px;color:var(--danger);"></i>
+      </div>
+      <p style="font-size:15px;color:var(--text-main);line-height:1.5;">${message}</p>
+    </div>
+  `;
+  openModal(title, bodyHtml, () => {
+    closeModal();
+    onConfirm();
+  });
+  setTimeout(() => {
+    const submitBtn = document.querySelector('.modal-submit');
+    if (submitBtn) {
+      submitBtn.textContent = 'Confirmar';
+      submitBtn.style.background = 'var(--danger)';
+      submitBtn.style.borderColor = 'var(--danger)';
+    }
+  }, 50);
+}
+
 
 // ------------------------------------------------------------
 // 6. Toast System
@@ -513,6 +539,8 @@ document.addEventListener('DOMContentLoaded', () => {
   DataStore.seedData();
   initTheme();
   initNotifications();
+  initGlobalSearch();
+  initSidebarToggle();
 
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
@@ -639,6 +667,71 @@ function initDashboard() {
     }
   }).catch(() => {
     if (statEvents) statEvents.textContent = '—';
+  });
+
+  // --- Stat Trends (compare current month vs previous month) ---
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthDonations = donations.filter(d => {
+    const dd = new Date(d.date);
+    return dd.getMonth() === prevMonthDate.getMonth() && dd.getFullYear() === prevMonthDate.getFullYear();
+  }).reduce((sum, d) => sum + d.amount, 0);
+
+  const trendEls = document.querySelectorAll('.stat-trend');
+  if (trendEls.length >= 2 && currentMonthDonations > 0) {
+    const diff = prevMonthDonations > 0 ? Math.round(((currentMonthDonations - prevMonthDonations) / prevMonthDonations) * 100) : 100;
+    const arrow = diff >= 0 ? '↑' : '↓';
+    const cls = diff >= 0 ? 'positive' : 'negative';
+    trendEls[1].className = `stat-trend ${cls}`;
+    trendEls[1].textContent = `${arrow} ${Math.abs(diff)}% vs. ${getMonthName(prevMonthDate.getMonth())}`;
+  }
+  if (trendEls.length >= 1) {
+    const totalCount = members.length;
+    trendEls[0].className = 'stat-trend neutral';
+    trendEls[0].textContent = `${totalCount} miembros en total`;
+  }
+
+  // --- Hebrew Date & Shabat Countdown ---
+  HebrewCalendar.fetchData().then(data => {
+    if (!data || !data.items) return;
+    const hebrewDateItem = data.items.find(i => i.category === 'hebdate' && new Date(i.date).toDateString() === now.toDateString());
+    const subtitleEl = document.querySelector('.view-subtitle');
+    if (subtitleEl && hebrewDateItem) {
+      subtitleEl.innerHTML = `Resumen general de la congregación · <span style="color:var(--accent);font-weight:600;">${escapeHtml(hebrewDateItem.hebrew || hebrewDateItem.title)}</span>`;
+    }
+  });
+
+  HebrewCalendar.getCandleLighting().then(candles => {
+    if (!candles) return;
+    const candleTime = new Date(candles.date);
+    const diff = candleTime - now;
+    if (diff > 0 && diff < 7 * 24 * 60 * 60 * 1000) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      let countdownText = days > 0 ? `${days}d ${hours}h ${mins}m` : `${hours}h ${mins}m`;
+
+      const statsGrid = document.querySelector('.stats-grid');
+      if (statsGrid) {
+        const shabatCard = document.createElement('div');
+        shabatCard.className = 'stat-card';
+        shabatCard.style.background = 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))';
+        shabatCard.style.border = '1px solid rgba(212,175,55,0.2)';
+        shabatCard.innerHTML = `
+          <div class="stat-icon-wrapper" style="background:rgba(212,175,55,0.15);color:var(--accent);"><i class="ph ph-flame"></i></div>
+          <div class="stat-info">
+            <h3 style="color:var(--accent);">Shabat</h3>
+            <p class="stat-value" style="font-size:20px;">${countdownText}</p>
+            <span class="stat-trend neutral">Velas: ${candleTime.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})} · ${candleTime.toLocaleDateString('es-ES', {weekday:'short',day:'numeric',month:'short'})}</span>
+          </div>
+        `;
+        const cards = statsGrid.children;
+        if (cards.length >= 3) {
+          statsGrid.insertBefore(shabatCard, cards[2]);
+        } else {
+          statsGrid.appendChild(shabatCard);
+        }
+      }
+    }
   });
 
   // --- Yahrzeit list ---
@@ -785,6 +878,7 @@ function renderMembersTable() {
           </td>
           <td>
             <div class="action-buttons">
+              <button class="btn-small-icon" title="Historial de Aportes" onclick="showMemberDonationHistory('${m.id}')"><i class="ph ph-clock-counter-clockwise"></i></button>
               <button class="btn-small-icon" title="Copiar Datos de Contacto" onclick="copyMemberContact('${m.id}')"><i class="ph ph-copy"></i></button>
               <button class="btn-small-icon" title="Editar" onclick="openMemberModal('${m.id}')"><i class="ph ph-pencil-simple"></i></button>
               <button class="btn-small-icon" title="Eliminar" onclick="deleteMember('${m.id}')"><i class="ph ph-trash"></i></button>
@@ -867,6 +961,10 @@ function openMemberModal(memberId) {
           Tiene hijos en edad escolar
         </label>
       </div>
+      <div class="form-group form-group-full">
+        <label for="modal-member-notes">Notas Internas (solo staff)</label>
+        <textarea id="modal-member-notes" class="form-input" rows="3" placeholder="Observaciones privadas sobre este miembro..." style="resize:vertical;min-height:60px;">${escapeHtml(existing?.notes || '')}</textarea>
+      </div>
     </div>`;
 
   openModal(title, bodyHtml, () => {
@@ -878,6 +976,7 @@ function openMemberModal(memberId) {
     const fatherId = document.getElementById('modal-member-father')?.value || '';
     const motherId = document.getElementById('modal-member-mother')?.value || '';
     const hasChildren = document.getElementById('modal-member-children')?.checked || false;
+    const notes = document.getElementById('modal-member-notes')?.value.trim() || '';
 
     if (!name) { showToast('El nombre es obligatorio', 'error'); return; }
 
@@ -885,7 +984,7 @@ function openMemberModal(memberId) {
     if (existing) {
       const idx = all.findIndex(m => m.id === existing.id);
       if (idx !== -1) {
-        all[idx] = { ...all[idx], name, family, email, phone, hasChildren, spouseId, fatherId, motherId };
+        all[idx] = { ...all[idx], name, family, email, phone, hasChildren, spouseId, fatherId, motherId, notes };
         
         // Bidirectional spouse linking helper
         if (spouseId) {
@@ -914,7 +1013,7 @@ function openMemberModal(memberId) {
       }
 
       all.push({
-        id: newId, name, family, email, phone, hasChildren,
+        id: newId, name, family, email, phone, hasChildren, notes,
         spouseId, fatherId, motherId,
         status: 'active', joinDate: new Date().toISOString().split('T')[0]
       });
@@ -930,12 +1029,13 @@ function openMemberModal(memberId) {
 function deleteMember(memberId) {
   const toDelete = DataStore.getMembers().find(m => m.id === memberId);
   const nameStr = toDelete ? toDelete.name : memberId;
-  if (!confirm(`¿Estás seguro de que deseas eliminar al miembro ${nameStr}?`)) return;
-  const members = DataStore.getMembers().filter(m => m.id !== memberId);
-  DataStore.saveMembers(members);
-  DataStore.addLog(`Eliminó al miembro ${nameStr}`);
-  showToast('Miembro eliminado', 'info');
-  renderMembersTable();
+  confirmModal('Eliminar Miembro', `¿Estás seguro de que deseas eliminar al miembro <strong>${escapeHtml(nameStr)}</strong>? Esta acción no se puede deshacer.`, () => {
+    const members = DataStore.getMembers().filter(m => m.id !== memberId);
+    DataStore.saveMembers(members);
+    DataStore.addLog(`Eliminó al miembro ${nameStr}`);
+    showToast('Miembro eliminado', 'info');
+    renderMembersTable();
+  });
 }
 
 
@@ -962,6 +1062,34 @@ function initFinances() {
   el('finance-dues-month', formatCurrency(duesTotal));
   el('finance-pledges', formatCurrency(pledgesTotal));
   el('finance-balance', formatCurrency(allTotal));
+
+  // --- Annual Summary ---
+  const currentYear = now.getFullYear();
+  const yearDonations = donations.filter(d => new Date(d.date).getFullYear() === currentYear);
+  const yearTotal = yearDonations.reduce((s, d) => s + d.amount, 0);
+  const yearByType = {};
+  yearDonations.forEach(d => { yearByType[d.type] = (yearByType[d.type] || 0) + d.amount; });
+  const allActiveMembers = DataStore.getMembers().filter(m => m.status === 'active');
+  const membersPaid = new Set(yearDonations.filter(d => d.type === 'Cuota Mensual').map(d => d.memberId));
+  const pctPaid = allActiveMembers.length > 0 ? Math.round((membersPaid.size / allActiveMembers.length) * 100) : 0;
+
+  const yearLabel = document.getElementById('finance-annual-year');
+  const yearTotalEl = document.getElementById('finance-annual-total');
+  const yearCountEl = document.getElementById('finance-annual-count');
+  const breakdownEl = document.getElementById('finance-annual-breakdown');
+  if (yearLabel) yearLabel.textContent = currentYear;
+  if (yearTotalEl) yearTotalEl.textContent = formatCurrency(yearTotal);
+  if (yearCountEl) yearCountEl.textContent = `${pctPaid}% de familias al día con cuotas`;
+  if (breakdownEl) {
+    const typeColors = { 'Donación': 'var(--accent)', 'Cuota Mensual': 'var(--info)', 'Promesa': '#8B5CF6', 'Kiddush': 'var(--success)' };
+    breakdownEl.innerHTML = Object.entries(yearByType).map(([type, amount]) => `
+      <div class="annual-type-card">
+        <div class="type-label">${escapeHtml(type)}</div>
+        <div class="type-amount" style="color:${typeColors[type] || 'var(--text-main)'}">${formatCurrency(amount)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${yearDonations.filter(d => d.type === type).length} registros</div>
+      </div>
+    `).join('');
+  }
 
   // --- Bar chart (last 6 months) ---
   renderFinanceChart(donations);
@@ -1150,6 +1278,9 @@ function initCalendar() {
     renderCalendarGrid();
     loadCalendarData();
   });
+
+  const addEventBtn = document.getElementById('btn-add-calendar-event') || document.getElementById('btn-add-event');
+  if (addEventBtn) addEventBtn.addEventListener('click', openCustomEventModal);
 }
 
 function renderCalendarGrid() {
@@ -1264,6 +1395,26 @@ async function loadCalendarData() {
             badge.className = 'yahrzeit-badge';
             badge.innerHTML = `<i class="ph ph-candle"></i> ${escapeHtml(y.deceasedName)}`;
             badge.title = `Yahrzeit de ${y.deceasedName} (${y.relation})`;
+            cell.appendChild(badge);
+          }
+        }
+      }
+    });
+
+    // 3b. Render custom community events
+    const customEvents = DataStore.getCustomEvents();
+    customEvents.forEach(ev => {
+      const parts = ev.date.split('-');
+      if (parts.length === 3) {
+        const evMonth = parseInt(parts[1], 10) - 1;
+        const evYear = parseInt(parts[0], 10);
+        if (evMonth === month && evYear === year) {
+          const cell = grid.querySelector(`[data-date="${ev.date}"]`);
+          if (cell) {
+            const badge = document.createElement('div');
+            badge.className = 'custom-event-badge';
+            badge.innerHTML = `<i class="ph ph-calendar-plus"></i> ${escapeHtml(ev.title)}`;
+            badge.title = ev.description || ev.title;
             cell.appendChild(badge);
           }
         }
@@ -1453,12 +1604,13 @@ function openYahrzeitModal() {
 function deleteYahrzeit(id) {
   const toDelete = DataStore.getYahrzeits().find(y => y.id === id);
   const nameStr = toDelete ? toDelete.deceasedName : id;
-  if (!confirm(`¿Estás seguro de que deseas eliminar el Yahrzeit de ${nameStr}?`)) return;
-  const yahrzeits = DataStore.getYahrzeits().filter(y => y.id !== id);
-  DataStore.saveYahrzeits(yahrzeits);
-  DataStore.addLog(`Eliminó el Yahrzeit de ${nameStr}`);
-  showToast('Yahrzeit eliminado', 'info');
-  renderYahrzeitCards();
+  confirmModal('Eliminar Yahrzeit', `¿Estás seguro de que deseas eliminar el Yahrzeit de <strong>${escapeHtml(nameStr)}</strong>?`, () => {
+    const yahrzeits = DataStore.getYahrzeits().filter(y => y.id !== id);
+    DataStore.saveYahrzeits(yahrzeits);
+    DataStore.addLog(`Eliminó el Yahrzeit de ${nameStr}`);
+    showToast('Yahrzeit eliminado', 'info');
+    renderYahrzeitCards();
+  });
 }
 
 
@@ -2749,9 +2901,265 @@ function renderAdminLogs() {
 }
 
 function clearAdminLogs() {
-  if (confirm('¿Estás seguro de que deseas limpiar el historial de auditoría? Esta acción no afectará a los miembros ni a las finanzas.')) {
+  confirmModal('Limpiar Registro', '¿Estás seguro de que deseas limpiar el historial de auditoría? Esta acción no afectará a los miembros ni a las finanzas.', () => {
     DataStore.saveLogs([]);
     renderAdminLogs();
     showToast('Historial de actividad limpiado');
+  });
+}
+
+
+// ============================================================
+// NEW FEATURES v3.0
+// ============================================================
+
+// ------------------------------------------------------------
+// Data Backup & Restore
+// ------------------------------------------------------------
+function exportAllData() {
+  const data = {};
+  const keys = ['members', 'donations', 'yahrzeits', 'messages', 'users', 'tasks', 'logs', 'theme', 'current_user', 'dismissed_notifications', 'custom_events'];
+  keys.forEach(k => {
+    const val = localStorage.getItem('kehila_' + k);
+    if (val) data[k] = JSON.parse(val);
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kehila_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  DataStore.addLog('Exportó una copia de seguridad de los datos');
+  showToast('Copia de seguridad descargada correctamente');
+}
+
+function importAllData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const validKeys = ['members', 'donations', 'yahrzeits', 'messages', 'users', 'tasks', 'logs', 'theme', 'current_user', 'dismissed_notifications', 'custom_events'];
+        Object.keys(data).forEach(k => {
+          if (validKeys.includes(k)) {
+            localStorage.setItem('kehila_' + k, JSON.stringify(data[k]));
+          }
+        });
+        DataStore.addLog('Restauró datos desde una copia de seguridad');
+        showToast('Datos restaurados correctamente. Recargando...', 'success');
+        setTimeout(() => location.reload(), 1500);
+      } catch (err) {
+        showToast('Error: El archivo no es un backup válido', 'error');
+      }
+    };
+    reader.readAsText(file);
+  });
+  input.click();
+}
+
+// ------------------------------------------------------------
+// Global Search
+// ------------------------------------------------------------
+function initGlobalSearch() {
+  const searchInput = document.querySelector('.search-bar input');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    let dropdown = document.getElementById('global-search-dropdown');
+    if (dropdown) dropdown.remove();
+    if (query.length < 2) return;
+
+    const results = [];
+
+    DataStore.getMembers().forEach(m => {
+      if (m.name.toLowerCase().includes(query) || m.family.toLowerCase().includes(query) || m.email.toLowerCase().includes(query)) {
+        results.push({ type: 'Miembro', icon: 'ph-user', label: m.name, sub: m.family, view: 'members' });
+      }
+    });
+
+    DataStore.getDonations().forEach(d => {
+      if (d.memberName.toLowerCase().includes(query) || d.type.toLowerCase().includes(query) || (d.notes && d.notes.toLowerCase().includes(query))) {
+        results.push({ type: 'Finanza', icon: 'ph-coins', label: `${d.memberName} — ${formatCurrency(d.amount)}`, sub: `${d.type} · ${formatDateShort(d.date)}`, view: 'finances' });
+      }
+    });
+
+    DataStore.getYahrzeits().forEach(y => {
+      if (y.deceasedName.toLowerCase().includes(query) || (y.hebrewName && y.hebrewName.toLowerCase().includes(query))) {
+        results.push({ type: 'Yahrzeit', icon: 'ph-candle', label: y.deceasedName, sub: y.hebrewName || y.relation, view: 'yahrzeits' });
+      }
+    });
+
+    DataStore.getMessages().forEach(msg => {
+      if (msg.subject.toLowerCase().includes(query) || msg.body.toLowerCase().includes(query)) {
+        results.push({ type: 'Mensaje', icon: 'ph-envelope', label: msg.subject, sub: msg.recipients, view: 'communications' });
+      }
+    });
+
+    if (results.length === 0) return;
+
+    dropdown = document.createElement('div');
+    dropdown.id = 'global-search-dropdown';
+    dropdown.className = 'global-search-dropdown';
+    dropdown.innerHTML = results.slice(0, 8).map(r => {
+      let badgeStyle = 'background:var(--bg-main); color:var(--text-muted);';
+      if (r.type === 'Miembro') badgeStyle = 'background:var(--info-bg); color:var(--info);';
+      else if (r.type === 'Finanza') badgeStyle = 'background:var(--success-bg); color:var(--success);';
+      else if (r.type === 'Yahrzeit') badgeStyle = 'background:var(--danger-bg); color:var(--danger);';
+      else if (r.type === 'Mensaje') badgeStyle = 'background:var(--warning-bg); color:var(--warning);';
+      
+      return `
+        <div class="search-result-item" data-view="${r.view}">
+          <div class="result-icon">
+            <i class="ph ${r.icon}"></i>
+          </div>
+          <div class="result-info">
+            <div class="result-name">${escapeHtml(r.label)}</div>
+            <div class="result-detail">${escapeHtml(r.sub)}</div>
+          </div>
+          <span class="result-type-badge" style="${badgeStyle}">${escapeHtml(r.type)}</span>
+        </div>
+      `;
+    }).join('');
+
+    searchInput.parentElement.style.position = 'relative';
+    searchInput.parentElement.appendChild(dropdown);
+
+    dropdown.querySelectorAll('.search-result-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const view = item.getAttribute('data-view');
+        searchInput.value = '';
+        dropdown.remove();
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        const navTarget = document.querySelector(`.nav-item[data-view="${view}"]`);
+        if (navTarget) navTarget.classList.add('active');
+        renderView(view);
+      });
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-bar')) {
+      const dd = document.getElementById('global-search-dropdown');
+      if (dd) dd.remove();
+    }
+  });
+}
+
+// ------------------------------------------------------------
+// Member Donation History
+// ------------------------------------------------------------
+window.showMemberDonationHistory = function(memberId) {
+  const member = DataStore.getMembers().find(m => m.id === memberId);
+  const donations = DataStore.getDonations().filter(d => d.memberId === memberId).sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (!member) return;
+
+  const total = donations.reduce((s, d) => s + d.amount, 0);
+  let bodyHtml = '';
+  if (donations.length === 0) {
+    bodyHtml = '<p style="text-align:center;color:var(--text-muted);padding:16px;">No hay aportes registrados para este miembro.</p>';
+  } else {
+    bodyHtml = `
+      <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;font-size:14px;color:var(--text-main);">Total acumulado</span>
+        <span style="font-weight:700;font-size:18px;color:var(--accent);">${formatCurrency(total)}</span>
+      </div>
+      <div style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+        ${donations.map(d => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;">
+            <div>
+              <div style="font-weight:600;font-size:13px;color:var(--text-main);">${escapeHtml(d.type)}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${formatDate(d.date)}${d.notes ? ' · ' + escapeHtml(d.notes) : ''}</div>
+            </div>
+            <span style="font-weight:700;font-size:14px;color:var(--success);">${formatCurrency(d.amount)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
+
+  if (member.notes) {
+    bodyHtml += `
+      <div style="margin-top:16px;padding:12px;background:rgba(49,130,206,0.05);border:1px solid rgba(49,130,206,0.15);border-radius:10px;">
+        <div style="font-weight:600;font-size:12px;color:var(--info);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ph ph-note-pencil"></i> Notas Internas</div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin:0;">${escapeHtml(member.notes)}</p>
+      </div>
+    `;
+  }
+
+  openModal(`Historial de Aportes — ${escapeHtml(member.name)}`, bodyHtml, null);
+};
+
+// ------------------------------------------------------------
+// Custom Calendar Events
+// ------------------------------------------------------------
+function openCustomEventModal() {
+  const bodyHtml = `
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="modal-event-title">Título del Evento</label>
+        <input type="text" id="modal-event-title" class="form-input" placeholder="Ej: Cena Comunitaria de Pésaj">
+      </div>
+      <div class="form-group">
+        <label for="modal-event-date">Fecha</label>
+        <input type="date" id="modal-event-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group form-group-full">
+        <label for="modal-event-desc">Descripción (opcional)</label>
+        <textarea id="modal-event-desc" class="form-input" rows="2" placeholder="Detalles del evento..." style="resize:vertical;"></textarea>
+      </div>
+    </div>
+  `;
+
+  openModal('Nuevo Evento Comunitario', bodyHtml, () => {
+    const title = document.getElementById('modal-event-title')?.value.trim();
+    const date = document.getElementById('modal-event-date')?.value;
+    const description = document.getElementById('modal-event-desc')?.value.trim();
+
+    if (!title || !date) {
+      showToast('El título y la fecha son obligatorios', 'error');
+      return;
+    }
+
+    const events = DataStore.getCustomEvents();
+    events.push({ id: generateId(), title, date, description });
+    DataStore.saveCustomEvents(events);
+    DataStore.addLog(`Creó el evento comunitario: ${title}`);
+    closeModal();
+    showToast('Evento creado correctamente');
+    renderCalendarGrid();
+    loadCalendarData();
+  });
+}
+
+// ------------------------------------------------------------
+// Sidebar Toggle
+// ------------------------------------------------------------
+function initSidebarToggle() {
+  const btn = document.getElementById('sidebar-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  if (!btn || !sidebar) return;
+
+  btn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+}
+
+// ------------------------------------------------------------
+// Print Report
+// ------------------------------------------------------------
+function printReport(viewName) {
+  document.body.classList.add('printing');
+  document.body.setAttribute('data-print-view', viewName);
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove('printing');
+    document.body.removeAttribute('data-print-view');
+  }, 500);
 }

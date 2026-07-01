@@ -1277,3 +1277,232 @@ html[data-theme='dark'] h6 {
 [data-theme='dark'] .tree-node.empty {
     background: #1f242c !important;
 }
+
+/* ============================================================
+   GLOBAL SEARCH DROPDOWN
+   ============================================================ */
+.search-bar {
+    position: relative;
+}
+
+.global-search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    min-width: 340px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+    max-height: 360px;
+    overflow-y: auto;
+    animation: searchDropIn 0.2s ease-out;
+}
+
+@keyframes searchDropIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.search-result-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: var(--bg-main);
+}
+
+.search-result-item .result-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.search-result-item .result-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-result-item .result-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-item .result-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.search-result-item .result-type-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+.global-search-dropdown .no-results {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ============================================================
+   CUSTOM CALENDAR EVENT BADGE
+   ============================================================ */
+.custom-event-badge {
+    display: block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    background: rgba(56, 161, 105, 0.12);
+    color: var(--success);
+    font-weight: 600;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.custom-event-badge:hover {
+    background: rgba(56, 161, 105, 0.25);
+}
+
+/* ============================================================
+   STAT TREND COLORS
+   ============================================================ */
+.stat-trend.negative {
+    color: var(--danger);
+}
+
+/* ============================================================
+   SIDEBAR COLLAPSIBLE
+   ============================================================ */
+.btn-sidebar-toggle {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--sidebar-text);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.btn-sidebar-toggle:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.sidebar.collapsed {
+    width: 72px;
+}
+
+.sidebar.collapsed .brand-title,
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .user-info {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 24px 12px;
+}
+
+.sidebar.collapsed .sidebar-header .icon-large {
+    display: none;
+}
+
+.sidebar.collapsed .btn-sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px;
+    gap: 0;
+}
+
+.sidebar.collapsed .sidebar-nav {
+    padding: 24px 8px;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar.collapsed .user-profile {
+    justify-content: center;
+}
+
+/* ============================================================
+   ANNUAL SUMMARY BREAKDOWN CARDS
+   ============================================================ */
+.annual-type-card {
+    background: var(--bg-main);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition-fast);
+}
+
+.annual-type-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.annual-type-card .type-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.annual-type-card .type-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.annual-type-card .type-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}

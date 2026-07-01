@@ -19,6 +19,7 @@
             <div class="sidebar-header">
                 <i class="ph ph-synagogue text-accent icon-large"></i>
                 <h1 class="brand-title">Kehilá<span class="text-accent">Admin</span></h1>
+                <button class="btn-sidebar-toggle" id="sidebar-toggle" title="Colapsar menú"><i class="ph ph-caret-left"></i></button>
             </div>
 
             <nav class="sidebar-nav">
@@ -175,6 +176,7 @@
                 <p class="view-subtitle">Gestiona las familias e individuos de la congregación</p>
             </div>
             <div style="display:flex; gap:12px;">
+                <button class="btn-secondary" onclick="window.print()" title="Imprimir listado"><i class="ph ph-printer"></i></button>
                 <button class="btn-secondary" id="btn-export-members"><i class="ph ph-download-simple"></i> Exportar CSV</button>
                 <button class="btn-primary" id="btn-add-member"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
             </div>
@@ -207,6 +209,7 @@
                 <p class="view-subtitle">Control de donaciones, cuotas y promesas</p>
             </div>
             <div style="display:flex; gap:12px;">
+                <button class="btn-secondary" onclick="window.print()" title="Imprimir reporte"><i class="ph ph-printer"></i></button>
                 <button class="btn-secondary" id="btn-export-transactions"><i class="ph ph-download-simple"></i> Exportar CSV</button>
                 <button class="btn-primary" id="btn-add-donation"><i class="ph ph-plus-circle"></i> Nueva Donación</button>
             </div>
@@ -227,6 +230,22 @@
             <div class="stat-card">
                 <div class="stat-icon-wrapper" style="background:var(--success-bg);color:var(--success)"><i class="ph ph-chart-line-up"></i></div>
                 <div class="stat-info"><h3>Balance General</h3><p class="stat-value" id="finance-balance">$0</p></div>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header"><h3>Resumen Anual <span id="finance-annual-year" style="font-family:'Inter',sans-serif; font-size:14px; color:var(--text-muted); font-weight:500;"></span></h3></div>
+            <div class="card-body" style="padding:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div>
+                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">Ingresos Totales del Año</p>
+                        <p style="font-size:32px; font-weight:700; color:var(--success);" id="finance-annual-total">$0</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">Transacciones</p>
+                        <p style="font-size:32px; font-weight:700; color:var(--text-main);" id="finance-annual-count">0</p>
+                    </div>
+                </div>
+                <div id="finance-annual-breakdown" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px;"></div>
             </div>
         </div>
         <div class="dashboard-grid">
@@ -252,9 +271,12 @@
 
     <!-- Calendar View -->
     <template id="view-calendar">
-        <div class="view-header">
-            <h2 class="view-title">Calendario Hebreo</h2>
-            <p class="view-subtitle">Festividades, servicios y eventos de la comunidad</p>
+        <div class="view-header flex-between">
+            <div>
+                <h2 class="view-title">Calendario Hebreo</h2>
+                <p class="view-subtitle">Festividades, servicios y eventos de la comunidad</p>
+            </div>
+            <button class="btn-primary" id="btn-add-event"><i class="ph ph-plus-circle"></i> Nuevo Evento</button>
         </div>
         <div class="dashboard-grid">
             <div class="card col-span-2">
@@ -531,7 +553,9 @@
                 <h2 class="view-title">Admin / Perfiles</h2>
                 <p class="view-subtitle">Gestiona las cuentas de usuario y niveles de acceso al sistema</p>
             </div>
-            <div>
+            <div style="display:flex;gap:12px;">
+                <button class="btn-secondary" onclick="exportAllData()" title="Descargar copia de seguridad"><i class="ph ph-download-simple"></i> Exportar Datos</button>
+                <button class="btn-secondary" onclick="importAllData()" title="Restaurar desde archivo"><i class="ph ph-upload-simple"></i> Importar Datos</button>
                 <button class="btn-primary" id="btn-add-user"><i class="ph ph-plus"></i> Nuevo Usuario</button>
             </div>
         </div>
