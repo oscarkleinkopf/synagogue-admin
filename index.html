@@ -152,7 +152,10 @@
                 <h2 class="view-title">Directorio de Miembros</h2>
                 <p class="view-subtitle">Gestiona las familias e individuos de la congregación</p>
             </div>
-            <button class="btn-primary" id="btn-add-member"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
+            <div style="display:flex; gap:12px;">
+                <button class="btn-secondary" id="btn-export-members"><i class="ph ph-download-simple"></i> Exportar CSV</button>
+                <button class="btn-primary" id="btn-add-member"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
+            </div>
         </div>
         <div class="card">
             <div class="search-filters">
@@ -181,7 +184,10 @@
                 <h2 class="view-title">Finanzas</h2>
                 <p class="view-subtitle">Control de donaciones, cuotas y promesas</p>
             </div>
-            <button class="btn-primary" id="btn-add-donation"><i class="ph ph-plus-circle"></i> Nueva Donación</button>
+            <div style="display:flex; gap:12px;">
+                <button class="btn-secondary" id="btn-export-transactions"><i class="ph ph-download-simple"></i> Exportar CSV</button>
+                <button class="btn-primary" id="btn-add-donation"><i class="ph ph-plus-circle"></i> Nueva Donación</button>
+            </div>
         </div>
         <div class="stats-grid">
             <div class="stat-card">
@@ -207,7 +213,16 @@
                 <div class="card-body"><div id="finance-chart" class="chart-container"></div></div>
             </div>
             <div class="card">
-                <div class="card-header"><h3>Últimas Transacciones</h3></div>
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Últimas Transacciones</h3>
+                    <select class="select-input" id="finance-type-filter" style="padding: 4px 8px; font-size: 13px; min-width: 130px; margin-bottom: 0;">
+                        <option value="all">Todos los tipos</option>
+                        <option value="Donación">Donaciones</option>
+                        <option value="Cuota Mensual">Cuotas</option>
+                        <option value="Promesa">Promesas</option>
+                        <option value="Kiddush">Kiddush</option>
+                    </select>
+                </div>
                 <div class="card-body"><ul class="list-group" id="transactions-list"></ul></div>
             </div>
         </div>
@@ -343,15 +358,26 @@
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header"><h3>Actividad de la Semana</h3></div>
-                <div class="card-body" style="padding:24px;text-align:center">
-                    <div style="background:#F3F4F6;border-radius:12px;padding:12px;margin-bottom:16px">
-                        <img id="kids-activity-img" src="images/parasha_coloring_page.png" alt="Página para colorear" style="width:100%;border-radius:8px;border:1px solid var(--border-color)">
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <div class="card">
+                    <div class="card-header"><h3>Actividad de la Semana</h3></div>
+                    <div class="card-body" style="padding:24px;text-align:center">
+                        <div style="background:#F3F4F6;border-radius:12px;padding:12px;margin-bottom:16px">
+                            <img id="kids-activity-img" src="images/parasha_coloring_page.png" alt="Página para colorear" style="width:100%;border-radius:8px;border:1px solid var(--border-color)">
+                        </div>
+                        <h4 id="kids-activity-title" style="margin-bottom:8px">¡Colorea!</h4>
+                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
+                        <button class="btn-primary" style="width:100%;justify-content:center" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
                     </div>
-                    <h4 id="kids-activity-title" style="margin-bottom:8px">¡Colorea!</h4>
-                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
-                    <button class="btn-primary" style="width:100%;justify-content:center" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
+                </div>
+
+                <div class="card" id="trivia-card">
+                    <div class="card-header" style="background:#F59E0B; color:white; border-bottom:none;">
+                        <h3 style="display:flex; align-items:center; gap:8px; color:white; margin:0;"><i class="ph ph-game-controller"></i> Trivia de la Parashá</h3>
+                    </div>
+                    <div class="card-body" id="trivia-body" style="padding:24px;">
+                        <!-- Populated by JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -385,6 +411,8 @@
                 </div>
                 
                 <div class="tree-visualizer" style="display:flex; flex-direction:column; align-items:center; gap:32px; width:100%; position:relative;">
+                    <!-- SVG Connectors -->
+                    <svg id="tree-connections" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0;"></svg>
                     
                     <!-- Parents Row -->
                     <div class="tree-row" style="display:flex; gap:64px; justify-content:center; position:relative; width:100%;">

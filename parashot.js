@@ -391,3 +391,110 @@ const PARASHOT_DATA = {
     coloring: 'images/torah_coloring.jpg'
   }
 };
+
+const TRIVIA_DATA = {
+  'Bereshit': [
+    {
+      q: '¿En cuántos días creó Dios el mundo?',
+      a: ['6 días', '10 días', '1 día'],
+      c: 0
+    },
+    {
+      q: '¿Quiénes fueron las primeras personas en el Jardín del Edén?',
+      a: ['Adán y Javá', 'Noaj y su esposa', 'Abraham y Sara'],
+      c: 0
+    },
+    {
+      q: '¿Qué día especial es para descansar y disfrutar en familia?',
+      a: ['Shabat', 'Rosh Hashaná', 'Purim'],
+      c: 0
+    }
+  ],
+  'Noach': [
+    {
+      q: '¿Qué construyó Noaj para salvar a los animales?',
+      a: ['Un arca gigante', 'Un castillo de piedra', 'Un puente de madera'],
+      c: 0
+    },
+    {
+      q: '¿Qué señal puso Dios en el cielo después de la lluvia?',
+      a: ['Un arcoíris', 'Una estrella brillante', 'Una nube dorada'],
+      c: 0
+    },
+    {
+      q: '¿Cuántos animales de cada especie invitó Noaj al menos?',
+      a: ['Dos (pareja)', 'Cinco', 'Diez'],
+      c: 0
+    }
+  ],
+  'Lech Lecha': [
+    {
+      q: '¿Qué significa "Lech Lechá"?',
+      a: ['Ve por ti / Camina', 'Quédate en casa', 'Come pan'],
+      c: 0
+    },
+    {
+      q: '¿Quién fue el primer patriarca que viajó a la tierra prometida?',
+      a: ['Abraham', 'Moshé', 'David'],
+      c: 0
+    },
+    {
+      q: '¿A quién llevó Abraham en su viaje?',
+      a: ['A su esposa Sara y su sobrino Lot', 'Al Faraón', 'A Noaj'],
+      c: 0
+    }
+  ],
+  'Shemot': [
+    {
+      q: '¿Dónde puso su madre al bebé Moshé para salvarlo?',
+      a: ['En una canasta en el río', 'En un cofre de oro', 'En una cueva'],
+      c: 0
+    },
+    {
+      q: '¿Quién encontró a Moshé flotando en el río Nilo?',
+      a: ['La hija del Faraón', 'Sara', 'Rebeca'],
+      c: 0
+    },
+    {
+      q: '¿Qué vio Moshé en el desierto que ardía pero no se consumía?',
+      a: ['Una zarza (arbusto)', 'Una antorcha', 'Una piedra mágica'],
+      c: 0
+    }
+  ],
+  'Yitro': [
+    {
+      q: '¿En qué montaña recibió Moshé las Tablas de la Ley?',
+      a: ['Monte Sinaí', 'Monte Ararat', 'Monte Moria'],
+      c: 0
+    },
+    {
+      q: '¿Cuántos son los Mandamientos principales escritos en las Tablas?',
+      a: ['10 mandamientos', '5 mandamientos', '100 mandamientos'],
+      c: 0
+    },
+    {
+      q: '¿Cómo se llama el suegro de Moshé que da nombre a esta parashá?',
+      a: ['Yitró', 'Aarón', 'Abraham'],
+      c: 0
+    }
+  ]
+};
+
+const TRIVIA_FALLBACK = [
+  {
+    q: '¿Cuántos libros forman la Torá?',
+    a: ['Cinco (5)', 'Tres (3)', 'Diez (10)'],
+    c: 0
+  },
+  {
+    q: '¿En qué idioma está escrita la Torá originalmente?',
+    a: ['Hebreo', 'Español', 'Latín'],
+    c: 0
+  },
+  {
+    q: '¿Cómo llamamos al rollo de pergamino donde se escribe la Torá?',
+    a: ['Sefer Torá', 'Sidur', 'Tanaj'],
+    c: 0
+  }
+];
+

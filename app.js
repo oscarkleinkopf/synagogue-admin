@@ -415,7 +415,8 @@ const state = {
   membersPage: 1,
   membersPerPage: 10,
   calendarMonth: new Date().getMonth(),
-  calendarYear: new Date().getFullYear()
+  calendarYear: new Date().getFullYear(),
+  financeFilter: 'all'
 };
 
 const viewContainer = document.getElementById('view-container');
@@ -616,6 +617,11 @@ function initMembers() {
   const addBtn = document.getElementById('btn-add-member');
   if (addBtn) {
     addBtn.addEventListener('click', () => openMemberModal());
+  }
+
+  const exportBtn = document.getElementById('btn-export-members');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportMembersToCSV);
   }
 }
 
@@ -852,6 +858,22 @@ function initFinances() {
   // --- Add donation button ---
   const addBtn = document.getElementById('btn-add-donation');
   if (addBtn) addBtn.addEventListener('click', openDonationModal);
+
+  // --- Filter selector ---
+  const filterSelect = document.getElementById('finance-type-filter');
+  if (filterSelect) {
+    filterSelect.value = state.financeFilter || 'all';
+    filterSelect.addEventListener('change', (e) => {
+      state.financeFilter = e.target.value;
+      renderTransactionsList(DataStore.getDonations());
+    });
+  }
+
+  // --- Export button ---
+  const exportBtn = document.getElementById('btn-export-transactions');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportTransactionsToCSV);
+  }
 }
 
 function renderFinanceChart(donations) {
@@ -897,10 +919,16 @@ function renderTransactionsList(donations) {
   const listEl = document.getElementById('transactions-list');
   if (!listEl) return;
 
-  const sorted = [...donations].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+  const typeFilter = state.financeFilter || 'all';
+  let filtered = donations;
+  if (typeFilter !== 'all') {
+    filtered = donations.filter(d => d.type === typeFilter);
+  }
+
+  const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
 
   if (sorted.length === 0) {
-    listEl.innerHTML = '<p class="empty-text">No hay transacciones registradas.</p>';
+    listEl.innerHTML = '<p class="empty-text">No hay transacciones registradas de este tipo.</p>';
     return;
   }
 
@@ -1419,6 +1447,7 @@ function initKids() {
 
   function updateKidsView(key, activeName) {
     renderKidsContent(key, summaryEl, questionsEl, activityEl);
+    initTrivia(key);
     if (nameEl) {
       const isActive = activeName && activeName.toLowerCase().includes(key.toLowerCase());
       nameEl.innerHTML = `${escapeHtml(key)} ${isActive ? '<span style="font-size:14px;background:var(--success-bg);color:var(--success);padding:4px 8px;border-radius:10px;margin-left:8px;font-weight:600;font-family:\'Inter\',sans-serif;">Esta Semana</span>' : '<span style="font-size:14px;background:var(--info-bg);color:var(--info);padding:4px 8px;border-radius:10px;margin-left:8px;font-weight:600;font-family:\'Inter\',sans-serif;">Explorando</span>'}`;
@@ -1579,6 +1608,8 @@ function renderShorashimTree(memberId) {
   if (linkMyHeritage) linkMyHeritage.href = `https://www.myheritage.es/research?action=query&formId=1&qname=Name+FN.${encodeURIComponent(firstName)}+LN.${encodeURIComponent(lastName)}`;
   if (linkGeni) linkGeni.href = `https://www.geni.com/search?query=${encodeURIComponent(focusMember.name)}`;
   if (linkFamilySearch) linkFamilySearch.href = `https://www.familysearch.org/search/record/results?q.givenName=${encodeURIComponent(firstName)}&q.surname=${encodeURIComponent(lastName)}`;
+
+  setTimeout(drawTreeConnectors, 50);
 }
 
 // Global click handler to change tree focus
@@ -1705,4 +1736,315 @@ function exportMemberGedcom(memberId) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('Archivo GEDCOM exportado');
+}
+
+// ------------------------------------------------------------
+// CSV Export & Download Helpers
+// ------------------------------------------------------------
+function downloadCSV(filename, headers, rows) {
+  const escapeCSVCell = (cell) => {
+    const str = String(cell);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const csvContent = [
+    headers.map(escapeCSVCell).join(','),
+    ...rows.map(row => row.map(escapeCSVCell).join(','))
+  ].join('\n');
+
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Archivo CSV descargado correctamente');
+}
+
+function exportMembersToCSV() {
+  const members = getFilteredMembers();
+  if (members.length === 0) {
+    showToast('No hay miembros para exportar', 'warning');
+    return;
+  }
+
+  const headers = ['ID', 'Nombre', 'Familia', 'Email', 'Teléfono', 'Estado', 'Fecha Registro', 'Cónyuge ID', 'Padre ID', 'Madre ID'];
+  const rows = members.map(m => [
+    m.id,
+    m.name,
+    m.family,
+    m.email || '',
+    m.phone || '',
+    m.status === 'active' ? 'Activo' : 'Inactivo',
+    m.joinDate || '',
+    m.spouseId || '',
+    m.fatherId || '',
+    m.motherId || ''
+  ]);
+
+  downloadCSV('miembros_kehila.csv', headers, rows);
+}
+
+function exportTransactionsToCSV() {
+  const donations = DataStore.getDonations();
+  const typeFilter = state.financeFilter || 'all';
+  let filtered = donations;
+  if (typeFilter !== 'all') {
+    filtered = donations.filter(d => d.type === typeFilter);
+  }
+
+  if (filtered.length === 0) {
+    showToast('No hay transacciones para exportar', 'warning');
+    return;
+  }
+
+  const headers = ['ID', 'ID Miembro', 'Nombre Miembro', 'Monto ($)', 'Tipo', 'Fecha', 'Notas'];
+  const rows = filtered.map(d => [
+    d.id,
+    d.memberId,
+    d.memberName,
+    d.amount,
+    d.type,
+    d.date,
+    d.notes || ''
+  ]);
+
+  downloadCSV('transacciones_kehila.csv', headers, rows);
+}
+
+// ------------------------------------------------------------
+// Kids Interactive Trivia Engine
+// ------------------------------------------------------------
+const triviaState = {
+  questions: [],
+  currentIdx: 0,
+  score: 0,
+  selectedAnswer: null
+};
+
+function initTrivia(parashaKey) {
+  const triviaBody = document.getElementById('trivia-body');
+  if (!triviaBody) return;
+
+  const customQuestions = TRIVIA_DATA[parashaKey];
+  triviaState.questions = customQuestions ? customQuestions : TRIVIA_FALLBACK;
+  triviaState.currentIdx = 0;
+  triviaState.score = 0;
+  triviaState.selectedAnswer = null;
+
+  renderTriviaQuestion();
+}
+
+function renderTriviaQuestion() {
+  const triviaBody = document.getElementById('trivia-body');
+  if (!triviaBody) return;
+
+  const currentIdx = triviaState.currentIdx;
+  const questions = triviaState.questions;
+
+  if (currentIdx >= questions.length) {
+    triviaBody.innerHTML = `
+      <div style="text-align:center; padding:12px 0;">
+        <div style="font-size:48px; margin-bottom:12px;">🏆</div>
+        <h4 style="margin-bottom:8px; font-size:16px; color:var(--text-main);">¡Completado!</h4>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">
+          Respondiste correctamente <strong>${triviaState.score}</strong> de <strong>${questions.length}</strong> preguntas.
+        </p>
+        <button class="btn-primary" style="width:100%; justify-content:center; background:#F59E0B; border:none;" onclick="resetTriviaGame()">Jugar de nuevo</button>
+      </div>`;
+    return;
+  }
+
+  const qObj = questions[currentIdx];
+  triviaState.selectedAnswer = null;
+
+  triviaBody.innerHTML = `
+    <div>
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:12px;">
+        <span>Pregunta ${currentIdx + 1} de ${questions.length}</span>
+        <span>Aciertos: ${triviaState.score}</span>
+      </div>
+      <p style="font-weight:600; font-size:14px; color:var(--text-main); margin-bottom:16px; line-height:1.4;">
+        ${escapeHtml(qObj.q)}
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;" id="trivia-options">
+        ${qObj.a.map((option, idx) => `
+          <button class="btn-secondary trivia-opt-btn" style="text-align:left; justify-content:flex-start; width:100%; padding:12px 16px; font-weight:500; font-size:13px;" data-idx="${idx}">
+            ${escapeHtml(option)}
+          </button>
+        `).join('')}
+      </div>
+      <div id="trivia-feedback" style="margin-top:16px; min-height:24px; font-weight:600; font-size:13px; text-align:center;"></div>
+      <button class="btn-primary" id="trivia-next-btn" style="width:100%; justify-content:center; margin-top:16px; background:#F59E0B; border:none; display:none;">
+        Siguiente <i class="ph ph-arrow-right"></i>
+      </button>
+    </div>`;
+
+  const optionBtns = triviaBody.querySelectorAll('.trivia-opt-btn');
+  optionBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (triviaState.selectedAnswer !== null) return;
+      
+      const chosenIdx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+      triviaState.selectedAnswer = chosenIdx;
+      
+      const correctIdx = qObj.c;
+      const feedbackEl = document.getElementById('trivia-feedback');
+      const nextBtn = document.getElementById('trivia-next-btn');
+
+      optionBtns.forEach((b, bIdx) => {
+        if (bIdx === correctIdx) {
+          b.style.background = '#C6F6D5';
+          b.style.color = '#22543D';
+          b.style.borderColor = '#38A169';
+        } else if (bIdx === chosenIdx) {
+          b.style.background = '#FED7D7';
+          b.style.color = '#742A2A';
+          b.style.borderColor = '#E53E3E';
+        } else {
+          b.style.opacity = '0.6';
+        }
+      });
+
+      if (chosenIdx === correctIdx) {
+        triviaState.score++;
+        if (feedbackEl) feedbackEl.innerHTML = '<span style="color:#38A169;">¡Excelente! 🎉 Respuesta correcta.</span>';
+      } else {
+        if (feedbackEl) feedbackEl.innerHTML = `<span style="color:#E53E3E;">¡Oops! La respuesta correcta era: ${escapeHtml(qObj.a[correctIdx])}</span>`;
+      }
+
+      if (nextBtn) nextBtn.style.display = 'flex';
+    });
+  });
+
+  const nextBtn = triviaBody.querySelector('#trivia-next-btn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      triviaState.currentIdx++;
+      renderTriviaQuestion();
+    });
+  }
+}
+
+window.resetTriviaGame = function() {
+  const selectEl = document.getElementById('kids-parasha-select');
+  const activeKey = selectEl ? selectEl.value : 'Bereshit';
+  initTrivia(activeKey);
+};
+
+// ------------------------------------------------------------
+// Shorashim SVG Dynamic Connectors
+// ------------------------------------------------------------
+function drawTreeConnectors() {
+  const svg = document.getElementById('tree-connections');
+  const visualizer = document.querySelector('.tree-visualizer');
+  if (!svg || !visualizer) return;
+
+  svg.innerHTML = '';
+  const visRect = visualizer.getBoundingClientRect();
+
+  const getCenterTop = (el) => {
+    if (!el || el.offsetParent === null) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - visRect.left, y: r.top - visRect.top };
+  };
+
+  const getCenterBottom = (el) => {
+    if (!el || el.offsetParent === null) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - visRect.left, y: r.top + r.height - visRect.top };
+  };
+
+  const getCenterLeft = (el) => {
+    if (!el || el.offsetParent === null) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.left - visRect.left, y: r.top + r.height / 2 - visRect.top };
+  };
+
+  const getCenterRight = (el) => {
+    if (!el || el.offsetParent === null) return null;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width - visRect.left, y: r.top + r.height / 2 - visRect.top };
+  };
+
+  const drawLine = (p1, p2, color = 'var(--border-color)', isDashed = false) => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midY = (p1.y + p2.y) / 2;
+    const d = `M ${p1.x} ${p1.y} C ${p1.x} ${midY}, ${p2.x} ${midY}, ${p2.x} ${p2.y}`;
+    line.setAttribute('d', d);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('fill', 'none');
+    if (isDashed) {
+      line.setAttribute('stroke-dasharray', '4,4');
+    }
+    svg.appendChild(line);
+  };
+
+  const fatherNode = document.querySelector('#node-father .tree-node:not(.empty)');
+  const motherNode = document.querySelector('#node-mother .tree-node:not(.empty)');
+  const focusNode = document.querySelector('#node-focus .tree-node');
+  const spouseNode = document.querySelector('#node-spouse .tree-node:not(.empty)');
+  const relationLink = document.getElementById('tree-relation-link');
+  const childrenNodes = document.querySelectorAll('#nodes-children .tree-node:not(.empty)');
+
+  const focusTop = getCenterTop(focusNode);
+
+  // 1. Connect Parents to Focus Node
+  if (fatherNode) {
+    const fatherBottom = getCenterBottom(fatherNode);
+    if (fatherBottom && focusTop) drawLine(fatherBottom, focusTop);
+  }
+  if (motherNode) {
+    const motherBottom = getCenterBottom(motherNode);
+    if (motherBottom && focusTop) drawLine(motherBottom, focusTop);
+  }
+
+  // 2. Connect Focus Node to Spouse
+  if (spouseNode && focusNode) {
+    const focusRight = getCenterRight(focusNode);
+    const spouseLeft = getCenterLeft(spouseNode);
+    if (focusRight && spouseLeft) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', focusRight.x);
+      line.setAttribute('y1', focusRight.y);
+      line.setAttribute('x2', spouseLeft.x);
+      line.setAttribute('y2', spouseLeft.y);
+      line.setAttribute('stroke', 'var(--accent)');
+      line.setAttribute('stroke-width', '2');
+      line.setAttribute('stroke-dasharray', '4,4');
+      svg.appendChild(line);
+    }
+  }
+
+  // 3. Connect parents/focus to children
+  let parentConnectorPoint = null;
+  if (spouseNode && relationLink && relationLink.style.display !== 'none') {
+    parentConnectorPoint = getCenterBottom(relationLink);
+  } else if (focusNode) {
+    parentConnectorPoint = getCenterBottom(focusNode);
+  }
+
+  if (parentConnectorPoint && childrenNodes.length > 0) {
+    childrenNodes.forEach(child => {
+      const childTop = getCenterTop(child);
+      if (childTop) {
+        drawLine(parentConnectorPoint, childTop, 'var(--border-color)', false);
+      }
+    });
+  }
+}
+
+// Window resize handler for Shorashim SVG paths
+if (!window.hasTreeResizeListener) {
+  window.addEventListener('resize', () => {
+    if (state.currentView === 'shorashim') {
+      drawTreeConnectors();
+    }
+  });
+  window.hasTreeResizeListener = true;
 }
