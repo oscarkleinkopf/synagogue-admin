@@ -486,6 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
+  const globalNewRecordBtn = document.getElementById('btn-global-new-record');
+  if (globalNewRecordBtn) {
+    globalNewRecordBtn.addEventListener('click', openGlobalNewRecordModal);
+  }
+
   renderView(state.currentView);
 });
 
@@ -2092,3 +2097,39 @@ if (!window.hasTreeResizeListener) {
   });
   window.hasTreeResizeListener = true;
 }
+
+// ------------------------------------------------------------
+// Global New Record Handler
+// ------------------------------------------------------------
+function openGlobalNewRecordModal() {
+  const bodyHtml = `
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; padding:8px 0; text-align:center;">
+      <button class="btn-secondary" onclick="triggerGlobalNewRecord('member')" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px 16px; border-radius:12px; height:120px; cursor:pointer;">
+        <i class="ph ph-user-plus" style="font-size:32px; color:var(--info);"></i>
+        <span style="font-weight:600; font-size:13px; color:var(--text-main);">Nuevo Miembro</span>
+      </button>
+      <button class="btn-secondary" onclick="triggerGlobalNewRecord('donation')" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px 16px; border-radius:12px; height:120px; cursor:pointer;">
+        <i class="ph ph-hand-heart" style="font-size:32px; color:var(--accent);"></i>
+        <span style="font-weight:600; font-size:13px; color:var(--text-main);">Nueva Donación</span>
+      </button>
+      <button class="btn-secondary" onclick="triggerGlobalNewRecord('yahrzeit')" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px 16px; border-radius:12px; height:120px; cursor:pointer;">
+        <i class="ph ph-candle" style="font-size:32px; color:#FF6347;"></i>
+        <span style="font-weight:600; font-size:13px; color:var(--text-main);">Nuevo Yahrzeit</span>
+      </button>
+    </div>`;
+
+  openModal('Crear Nuevo Registro', bodyHtml, null);
+}
+
+window.triggerGlobalNewRecord = function(type) {
+  closeModal();
+  setTimeout(() => {
+    if (type === 'member') {
+      openMemberModal();
+    } else if (type === 'donation') {
+      openDonationModal();
+    } else if (type === 'yahrzeit') {
+      openYahrzeitModal();
+    }
+  }, 100);
+};
