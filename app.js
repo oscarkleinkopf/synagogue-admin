@@ -1531,6 +1531,20 @@ function renderKidsContent(key, summaryEl, questionsEl, activityEl) {
   const activityImgEl = document.getElementById('kids-activity-img');
   if (imgEl && data.illustration) imgEl.src = data.illustration;
   if (activityImgEl && data.coloring) activityImgEl.src = data.coloring;
+
+  // Render Parents Theater Script
+  const scriptEl = document.getElementById('kids-parasha-script');
+  if (scriptEl) {
+    const playData = PLAY_SCRIPTS[key] || PLAY_SCRIPT_FALLBACK;
+    const castHtml = `<p style="margin-bottom:8px; font-weight:600; color:var(--text-main);"><strong>Personajes:</strong> <span style="font-weight:normal; color:var(--text-muted);">${escapeHtml(playData.cast)}</span></p>`;
+    const dialogueHtml = playData.dialogue.map(line => `
+      <div style="margin-bottom:6px; font-size:13px; line-height:1.5;">
+        <span style="font-weight:600; color:#D97706; text-transform:uppercase; font-size:11px; display:inline-block; min-width:85px; vertical-align:top;">${escapeHtml(line.p)}:</span>
+        <span style="color:var(--text-muted); display:inline-block; width:calc(100% - 95px); vertical-align:top;">"${escapeHtml(line.d)}"</span>
+      </div>
+    `).join('');
+    scriptEl.innerHTML = castHtml + dialogueHtml;
+  }
 }
 
 

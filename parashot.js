@@ -498,3 +498,66 @@ const TRIVIA_FALLBACK = [
   }
 ];
 
+const PLAY_SCRIPTS = {
+  'Bereshit': {
+    cast: 'Narrador, Creador (Voz de arriba), Adán, Javá',
+    dialogue: [
+      { p: 'Narrador', d: 'En el principio de todo, no había nada de luz. Estaba todo muy oscuro.' },
+      { p: 'Voz (Arriba)', d: '¡Que se haga la luz! (Enciende la linterna de su móvil y sonríe).' },
+      { p: 'Narrador', d: 'Y apareció la luz. Luego hizo los árboles, los animales y a Adán y Javá.' },
+      { p: 'Adán', d: '¡Hola! Qué lindo lugar. Mira todos estos frutos deliciosos.' },
+      { p: 'Javá', d: '¡Sí! Pero recuerda que el séptimo día descansamos. ¡Feliz Shabat a todos!' }
+    ]
+  },
+  'Noach': {
+    cast: 'Narrador, Noaj, Jirafa, Elefante',
+    dialogue: [
+      { p: 'Narrador', d: 'Noaj está construyendo un barco enorme porque va a llover mucho.' },
+      { p: 'Noaj', d: '¡Suban todos al barco, rápido! ¡De dos en dos, no se empujen!' },
+      { p: 'Jirafa', d: '¡Cuidado con mi cuello largo al entrar, casi toco el techo!' },
+      { p: 'Elefante', d: '¡Y cuidado con mis orejas gigantes! (Hace sonido de trompa: ¡Pruuu!).' },
+      { p: 'Narrador', d: 'Todos se salvaron y al final vieron un hermoso arcoíris de promesa en el cielo.' }
+    ]
+  },
+  'Lech Lecha': {
+    cast: 'Narrador, Abraham, Sara',
+    dialogue: [
+      { p: 'Narrador', d: 'Dios le habla a Abraham y le pide viajar a una tierra nueva.' },
+      { p: 'Abraham', d: 'Sara, empaca las maletas, ¡emprendemos un gran viaje!' },
+      { p: 'Sara', d: 'Pero Abraham, ¿a dónde vamos? ¿Tenemos mapa?' },
+      { p: 'Abraham', d: 'No lo sé exactamente, pero confío en que Dios nos guiará y cuidará en el camino.' },
+      { p: 'Narrador', d: 'Y así, con fe y mucha valentía, iniciaron su gran aventura familiar.' }
+    ]
+  },
+  'Shemot': {
+    cast: 'Narrador, Moshé, Princesa de Egipto',
+    dialogue: [
+      { p: 'Narrador', d: 'Un bebé flota en una canasta en el río Nilo. La princesa lo ve.' },
+      { p: 'Princesa', d: '¡Oh, miren! Un bebé hermoso. Lo llamaré Moshé, porque lo salvé de las aguas.' },
+      { p: 'Narrador', d: 'Años después, Moshé ve un arbusto ardiendo en el desierto.' },
+      { p: 'Moshé', d: '¡Wow! Este arbusto tiene fuego pero no se quema. ¡Es una señal de Dios!' },
+      { p: 'Narrador', d: 'Así fue elegido para guiar al pueblo hacia la libertad.' }
+    ]
+  },
+  'Yitro': {
+    cast: 'Narrador, Moshé, Pueblo de Israel',
+    dialogue: [
+      { p: 'Narrador', d: 'Moshé baja del Monte Sinaí con las Tablas de los Diez Mandamientos.' },
+      { p: 'Moshé', d: '¡Traigo las palabras más importantes para vivir en paz y amor!' },
+      { p: 'Pueblo', d: '¡Naasé Vnishmá! ¡Haremos todo lo que dice la Torá con alegría!' },
+      { p: 'Narrador', d: 'Y desde ese momento, la Torá se convirtió en el tesoro de nuestro pueblo.' }
+    ]
+  }
+};
+
+const PLAY_SCRIPT_FALLBACK = {
+  cast: 'Narrador, Padre A (Preguntón), Padre B (Sabio)',
+  dialogue: [
+    { p: 'Narrador', d: 'Dos padres conversan sobre la enseñanza de la parashá de la semana en la sinagoga.' },
+    { p: 'Padre A', d: '¡Qué historia tan bonita leímos hoy en la Torá! Pero, ¿cómo se la explicamos a los niños?' },
+    { p: 'Padre B', d: 'Es simple: nos enseña a ser buenos amigos, compartir lo que tenemos y festejar el Shabat con amor.' },
+    { p: 'Padre A', d: '¡Tienes toda la razón! Vamos a actuarlo para ellos. ¡Shabat Shalom!' },
+    { p: 'Narrador', d: 'Y todos los niños aplaudieron y compartieron jalá.' }
+  ]
+};
+
