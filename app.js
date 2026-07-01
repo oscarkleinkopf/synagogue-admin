@@ -1020,24 +1020,23 @@ function renderCalendarGrid() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date();
 
-  const dayLabels = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  let html = dayLabels.map(d => `<div class="cal-header">${d}</div>`).join('');
+  let html = '';
 
   // Empty cells before first day
   for (let i = 0; i < firstDay; i++) {
-    html += '<div class="cal-day empty"></div>';
+    html += '<div class="calendar-day empty"></div>';
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     const isShabat = new Date(year, month, d).getDay() === 6;
-    const classes = ['cal-day'];
+    const classes = ['calendar-day'];
     if (isToday) classes.push('today');
-    if (isShabat) classes.push('shabat');
+    if (isShabat) classes.push('shabbat');
 
     html += `<div class="${classes.join(' ')}" data-date="${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}">
-      <span class="cal-day-num">${d}</span>
-      <div class="cal-day-dots"></div>
+      <span class="day-number">${d}</span>
+      <div class="calendar-events"></div>
     </div>`;
   }
 
@@ -1046,30 +1045,88 @@ function renderCalendarGrid() {
 
 async function loadCalendarData() {
   try {
-    // Holidays
-    const holidays = await HebrewCalendar.getHolidays();
+    const data = await HebrewCalendar.fetchData();
     const grid = document.getElementById('calendar-grid');
-    if (grid && holidays.length > 0) {
-      holidays.forEach(h => {
-        const dateStr = h.date.split('T')[0];
-        const cell = grid.querySelector(`[data-date="${dateStr}"]`);
-        if (cell) {
-          const dots = cell.querySelector('.cal-day-dots');
-          if (dots && !dots.querySelector('.cal-dot')) {
-            const dot = document.createElement('span');
-            dot.className = 'cal-dot holiday';
-            dot.title = h.title;
-            dots.appendChild(dot);
+    if (!grid || !data || !data.items) return;
+
+    const holidays = data.items.filter(i => i.category === 'holiday');
+    const parashot = data.items.filter(i => i.category === 'parashat');
+
+    const year = state.calendarYear;
+    const month = state.calendarMonth;
+
+    // Clear any previous badges or dots to prevent duplicates on navigation
+    grid.querySelectorAll('.holiday-badge, .shabbat-badge, .yahrzeit-badge, .calendar-event-dot').forEach(el => el.remove());
+
+    // 1. Render holidays in the grid cells
+    holidays.forEach(h => {
+      const dateStr = h.date.split('T')[0];
+      const cell = grid.querySelector(`[data-date="${dateStr}"]`);
+      if (cell) {
+        const eventsContainer = cell.querySelector('.calendar-events');
+        if (eventsContainer && !eventsContainer.querySelector('.calendar-event-dot.holiday')) {
+          const dot = document.createElement('span');
+          dot.className = 'calendar-event-dot holiday';
+          dot.title = h.title;
+          eventsContainer.appendChild(dot);
+        }
+
+        if (!cell.querySelector('.holiday-badge')) {
+          const badge = document.createElement('div');
+          badge.className = 'holiday-badge';
+          badge.textContent = h.title;
+          badge.title = h.title;
+          cell.appendChild(badge);
+        }
+      }
+    });
+
+    // 2. Render Shabbat parashot in the grid cells (Saturdays)
+    parashot.forEach(p => {
+      const dateStr = p.date.split('T')[0];
+      const cell = grid.querySelector(`[data-date="${dateStr}"]`);
+      if (cell) {
+        const eventsContainer = cell.querySelector('.calendar-events');
+        if (eventsContainer && !eventsContainer.querySelector('.calendar-event-dot.shabbat')) {
+          const dot = document.createElement('span');
+          dot.className = 'calendar-event-dot shabbat';
+          dot.title = `Parashat ${p.title}`;
+          eventsContainer.appendChild(dot);
+        }
+
+        if (!cell.querySelector('.shabbat-badge')) {
+          const badge = document.createElement('div');
+          badge.className = 'shabbat-badge';
+          badge.textContent = p.title.replace('Parashat ', '');
+          badge.title = `Parashat ${p.title}`;
+          cell.appendChild(badge);
+        }
+      }
+    });
+
+    // 3. Render Yahrzeits for the community members
+    const yahrzeits = DataStore.getYahrzeits();
+    yahrzeits.forEach(y => {
+      const parts = y.gregorianDate.split('-');
+      if (parts.length === 3) {
+        const yYear = parseInt(parts[0], 10);
+        const yMonth = parseInt(parts[1], 10) - 1; // 0-indexed month
+        if (yMonth === month && yYear === year) {
+          const cell = grid.querySelector(`[data-date="${y.gregorianDate}"]`);
+          if (cell) {
+            const badge = document.createElement('div');
+            badge.className = 'yahrzeit-badge';
+            badge.innerHTML = `<i class="ph ph-candle"></i> ${escapeHtml(y.deceasedName)}`;
+            badge.title = `Yahrzeit de ${y.deceasedName} (${y.relation})`;
+            cell.appendChild(badge);
           }
         }
-      });
-    }
+      }
+    });
 
-    // Holidays list
+    // 4. Update Holidays list on the right panel
     const holidaysList = document.getElementById('holidays-list');
     if (holidaysList) {
-      const month = state.calendarMonth;
-      const year  = state.calendarYear;
       const thisMonthHolidays = holidays.filter(h => {
         const d = new Date(h.date);
         return d.getMonth() === month && d.getFullYear() === year;
@@ -1083,7 +1140,7 @@ async function loadCalendarData() {
             <div class="item-icon"><i class="ph ph-star"></i></div>
             <div class="item-content">
               <div class="item-title">${escapeHtml(h.title)}</div>
-              <div class="item-desc">${escapeHtml(h.hebrew)}</div>
+              <div class="item-desc">${escapeHtml(h.hebrew || '')}</div>
             </div>
             <div class="item-meta">
               <div style="font-size:13px;">${formatDateShort(h.date)}</div>
@@ -1092,7 +1149,7 @@ async function loadCalendarData() {
       }
     }
 
-    // Shabbat info
+    // 5. Update Shabbat info card on the right panel
     const shabbatInfo = document.getElementById('shabbat-info');
     if (shabbatInfo) {
       const [parasha, candles, havdalah] = await Promise.all([
