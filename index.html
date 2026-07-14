@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kehilá Admin | Sistema de Administración de Sinagoga</title>
-    <meta name="description" content="Sistema de administración integral para sinagogas. Gestiona miembros, finanzas, eventos, calendario hebreo y Shabat infantil.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -19,9 +18,8 @@
             <div class="sidebar-header">
                 <i class="ph ph-synagogue text-accent icon-large"></i>
                 <h1 class="brand-title">Kehilá<span class="text-accent">Admin</span></h1>
-                <button class="btn-sidebar-toggle" id="sidebar-toggle" title="Colapsar menú"><i class="ph ph-caret-left"></i></button>
             </div>
-
+            
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-view="dashboard">
                     <i class="ph ph-squares-four"></i>
@@ -35,39 +33,31 @@
                     <i class="ph ph-currency-circle-dollar"></i>
                     <span>Finanzas</span>
                 </a>
-                <a href="#" class="nav-item" data-view="calendar">
+                <a href="#" class="nav-item" data-view="events">
                     <i class="ph ph-calendar-blank"></i>
-                    <span>Calendario</span>
+                    <span>Eventos & Clases</span>
                 </a>
-                <a href="#" class="nav-item" data-view="yahrzeits">
-                    <i class="ph ph-candle"></i>
-                    <span>Yahrzeits</span>
+                <a href="#" class="nav-item" data-view="honors">
+                    <i class="ph ph-star"></i>
+                    <span>Honores (Aliyot)</span>
                 </a>
-                <a href="#" class="nav-item" data-view="shorashim">
-                    <i class="ph ph-tree-structure"></i>
-                    <span>Shorashim</span>
-                </a>
-                <div style="height:1px;background:rgba(255,255,255,0.1);margin:8px 0;"></div>
+                <div class="sidebar-divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
                 <a href="#" class="nav-item" data-view="communications">
                     <i class="ph ph-envelope-simple"></i>
                     <span>Comunicaciones</span>
                 </a>
                 <a href="#" class="nav-item kids-nav" data-view="kids">
-                    <i class="ph ph-star-four" style="color:var(--accent)"></i>
-                    <span style="font-weight:600">Shabat Infantil</span>
-                </a>
-                <a href="#" class="nav-item" data-view="admin">
-                    <i class="ph ph-gear"></i>
-                    <span>Admin / Perfiles</span>
+                    <i class="ph ph-star-four" style="color: var(--accent);"></i>
+                    <span style="font-weight: 600;">Shabat Infantil</span>
                 </a>
             </nav>
 
             <div class="sidebar-footer">
-                <div class="user-profile" id="current-user-profile" style="cursor:pointer;" title="Cambiar de usuario">
-                    <div class="avatar" id="current-user-avatar">AD</div>
+                <div class="user-profile">
+                    <div class="avatar">AD</div>
                     <div class="user-info">
-                        <span class="user-name" id="current-user-name">Admin</span>
-                        <span class="user-role" id="current-user-role">Administrador</span>
+                        <span class="user-name">Admin</span>
+                        <span class="user-role">Administrador</span>
                     </div>
                 </div>
             </div>
@@ -81,12 +71,8 @@
                     <input type="text" placeholder="Buscar miembros, donaciones...">
                 </div>
                 <div class="header-actions">
-                    <button class="btn-icon" id="theme-toggle" title="Cambiar tema"><i class="ph ph-moon"></i></button>
-                    <button class="btn-icon" id="notifications-btn" title="Notificaciones">
-                        <i class="ph ph-bell"></i>
-                        <span class="badge" id="notifications-badge" style="display:none;">0</span>
-                    </button>
-                    <button class="btn-primary" id="btn-global-new-record"><i class="ph ph-plus"></i> Nuevo Registro</button>
+                    <button class="btn-icon"><i class="ph ph-bell"></i><span class="badge">3</span></button>
+                    <button class="btn-primary"><i class="ph ph-plus"></i> Nuevo Registro</button>
                 </div>
             </header>
 
@@ -96,526 +82,285 @@
         </main>
     </div>
 
-    <!-- ==================== VIEW TEMPLATES ==================== -->
-
-    <!-- Dashboard View -->
+    <!-- View Templates (Hidden from DOM) -->
     <template id="view-dashboard">
         <div class="view-header">
             <h2 class="view-title">Dashboard</h2>
             <p class="view-subtitle">Resumen general de la congregación</p>
         </div>
+
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon-wrapper blue-bg"><i class="ph ph-users-three"></i></div>
+                <div class="stat-icon-wrapper blue-bg">
+                    <i class="ph ph-users-three"></i>
+                </div>
                 <div class="stat-info">
                     <h3>Familias Activas</h3>
-                    <p class="stat-value" id="stat-families">--</p>
-                    <span class="stat-trend neutral">Cargando...</span>
+                    <p class="stat-value">142</p>
+                    <span class="stat-trend positive"><i class="ph ph-trend-up"></i> +5 este mes</span>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon-wrapper gold-bg"><i class="ph ph-coins"></i></div>
+                <div class="stat-icon-wrapper gold-bg">
+                    <i class="ph ph-coins"></i>
+                </div>
                 <div class="stat-info">
                     <h3>Donaciones (Mes)</h3>
-                    <p class="stat-value" id="stat-donations">--</p>
-                    <span class="stat-trend neutral">Cargando...</span>
+                    <p class="stat-value">$12,450</p>
+                    <span class="stat-trend positive"><i class="ph ph-trend-up"></i> +12% vs mes anterior</span>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon-wrapper purple-bg"><i class="ph ph-calendar-star"></i></div>
+                <div class="stat-icon-wrapper purple-bg">
+                    <i class="ph ph-calendar-star"></i>
+                </div>
                 <div class="stat-info">
                     <h3>Próximos Eventos</h3>
-                    <p class="stat-value" id="stat-events">--</p>
-                    <span class="stat-trend neutral">Cargando...</span>
+                    <p class="stat-value">4</p>
+                    <span class="stat-trend neutral">En los próximos 7 días</span>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon-wrapper red-bg"><i class="ph ph-candle"></i></div>
+                <div class="stat-icon-wrapper red-bg">
+                    <i class="ph ph-candle"></i>
+                </div>
                 <div class="stat-info">
                     <h3>Yahrzeits (Semana)</h3>
-                    <p class="stat-value" id="stat-yahrzeits">--</p>
-                    <span class="stat-trend neutral">Cargando...</span>
+                    <p class="stat-value">7</p>
+                    <span class="stat-trend neutral">Ver lista completa</span>
                 </div>
-            </div>
-        </div>
-        <div class="dashboard-grid">
-            <div class="card col-span-2">
-                <div class="card-header"><h3>Próximos Yahrzeits</h3><button class="btn-link">Ver Todos</button></div>
-                <div class="card-body"><ul class="list-group" id="yahrzeit-list"></ul></div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h3>Próximos Servicios</h3></div>
-                <div class="card-body"><ul class="list-group" id="services-list"></ul></div>
             </div>
         </div>
 
-        <div class="dashboard-grid" style="margin-top: 24px;">
-            <div class="card">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Mis Pendientes (Tareas)</h3>
-                    <button class="btn-primary" id="btn-dashboard-add-task" style="padding: 6px 12px; font-size: 12px; gap:4px; height:auto; width:auto;"><i class="ph ph-plus" style="font-size:14px;"></i> Nueva Tarea</button>
+        <div class="dashboard-grid">
+            <div class="card col-span-2">
+                <div class="card-header">
+                    <h3>Próximos Yahrzeits</h3>
+                    <button class="btn-link">Ver Todos</button>
                 </div>
-                <div class="card-body" style="padding: 16px;">
-                    <ul class="list-group" id="dashboard-tasks-list" style="display:flex; flex-direction:column; gap:10px; margin:0; padding:0;"></ul>
+                <div class="card-body">
+                    <ul class="list-group" id="yahrzeit-list">
+                        <!-- Populated by JS -->
+                    </ul>
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><h3>Alertas de Cobranza</h3></div>
-                <div class="card-body" style="padding: 20px 24px;">
-                    <div id="dashboard-billing-alerts" style="display:flex; flex-direction:column; gap:12px;"></div>
+                <div class="card-header">
+                    <h3>Próximos Servicios</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group" id="services-list">
+                        <!-- Populated by JS -->
+                    </ul>
                 </div>
             </div>
         </div>
     </template>
 
-    <!-- Members View -->
     <template id="view-members">
         <div class="view-header flex-between">
             <div>
                 <h2 class="view-title">Directorio de Miembros</h2>
                 <p class="view-subtitle">Gestiona las familias e individuos de la congregación</p>
             </div>
-            <div style="display:flex; gap:12px;">
-                <button class="btn-secondary" onclick="window.print()" title="Imprimir listado"><i class="ph ph-printer"></i></button>
-                <button class="btn-secondary" id="btn-export-members"><i class="ph ph-download-simple"></i> Exportar CSV</button>
-                <button class="btn-primary" id="btn-add-member"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
-            </div>
+            <button class="btn-primary"><i class="ph ph-user-plus"></i> Agregar Miembro</button>
         </div>
+
         <div class="card">
-            <div class="search-filters">
-                <input type="text" class="filter-input" id="member-search" placeholder="Buscar por nombre, familia o email...">
-                <select class="select-input" id="member-status-filter">
-                    <option value="all">Todos los estados</option>
-                    <option value="active">Activo</option>
-                    <option value="inactive">Inactivo</option>
-                </select>
-                <span class="member-count" id="member-count"></span>
+            <div class="table-controls">
+                <div class="filter-group">
+                    <select class="select-input">
+                        <option>Todos los estados</option>
+                        <option>Activo</option>
+                        <option>Inactivo</option>
+                    </select>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
-                    <thead><tr><th>Nombre</th><th>Familia</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody id="members-table-body"></tbody>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Familia</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
                 </table>
             </div>
-            <div id="members-pagination" class="pagination"></div>
         </div>
     </template>
 
-    <!-- Finances View -->
-    <template id="view-finances">
-        <div class="view-header flex-between">
-            <div>
-                <h2 class="view-title">Finanzas</h2>
-                <p class="view-subtitle">Control de donaciones, cuotas y promesas</p>
-            </div>
-            <div style="display:flex; gap:12px;">
-                <button class="btn-secondary" onclick="window.print()" title="Imprimir reporte"><i class="ph ph-printer"></i></button>
-                <button class="btn-secondary" id="btn-export-transactions"><i class="ph ph-download-simple"></i> Exportar CSV</button>
-                <button class="btn-primary" id="btn-add-donation"><i class="ph ph-plus-circle"></i> Nueva Donación</button>
-            </div>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon-wrapper gold-bg"><i class="ph ph-hand-heart"></i></div>
-                <div class="stat-info"><h3>Donaciones (Mes)</h3><p class="stat-value" id="finance-donations-month">$0</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon-wrapper blue-bg"><i class="ph ph-receipt"></i></div>
-                <div class="stat-info"><h3>Cuotas (Mes)</h3><p class="stat-value" id="finance-dues-month">$0</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon-wrapper purple-bg"><i class="ph ph-handshake"></i></div>
-                <div class="stat-info"><h3>Promesas Pendientes</h3><p class="stat-value" id="finance-pledges">$0</p></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon-wrapper" style="background:var(--success-bg);color:var(--success)"><i class="ph ph-chart-line-up"></i></div>
-                <div class="stat-info"><h3>Balance General</h3><p class="stat-value" id="finance-balance">$0</p></div>
-            </div>
-        </div>
-        <div class="card" style="margin-bottom:24px;">
-            <div class="card-header"><h3>Resumen Anual <span id="finance-annual-year" style="font-family:'Inter',sans-serif; font-size:14px; color:var(--text-muted); font-weight:500;"></span></h3></div>
-            <div class="card-body" style="padding:24px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <div>
-                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">Ingresos Totales del Año</p>
-                        <p style="font-size:32px; font-weight:700; color:var(--success);" id="finance-annual-total">$0</p>
-                    </div>
-                    <div style="text-align:right;">
-                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">Transacciones</p>
-                        <p style="font-size:32px; font-weight:700; color:var(--text-main);" id="finance-annual-count">0</p>
-                    </div>
-                </div>
-                <div id="finance-annual-breakdown" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px;"></div>
-            </div>
-        </div>
-        <div class="dashboard-grid">
-            <div class="card col-span-2">
-                <div class="card-header"><h3>Ingresos Últimos 6 Meses</h3></div>
-                <div class="card-body"><div id="finance-chart" class="chart-container"></div></div>
-            </div>
-            <div class="card">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Últimas Transacciones</h3>
-                    <select class="select-input" id="finance-type-filter" style="padding: 4px 8px; font-size: 13px; min-width: 130px; margin-bottom: 0;">
-                        <option value="all">Todos los tipos</option>
-                        <option value="Donación">Donaciones</option>
-                        <option value="Cuota Mensual">Cuotas</option>
-                        <option value="Promesa">Promesas</option>
-                        <option value="Kiddush">Kiddush</option>
-                    </select>
-                </div>
-                <div class="card-body"><ul class="list-group" id="transactions-list"></ul></div>
-            </div>
-        </div>
-    </template>
-
-    <!-- Calendar View -->
-    <template id="view-calendar">
-        <div class="view-header flex-between">
-            <div>
-                <h2 class="view-title">Calendario Hebreo</h2>
-                <p class="view-subtitle">Festividades, servicios y eventos de la comunidad</p>
-            </div>
-            <button class="btn-primary" id="btn-add-event"><i class="ph ph-plus-circle"></i> Nuevo Evento</button>
-        </div>
-        <div class="dashboard-grid">
-            <div class="card col-span-2">
-                <div class="card-header">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <button class="btn-small-icon" id="cal-prev"><i class="ph ph-caret-left"></i></button>
-                        <h3 id="calendar-month-title" style="min-width:180px;text-align:center"></h3>
-                        <button class="btn-small-icon" id="cal-next"><i class="ph ph-caret-right"></i></button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="calendar-container">
-                        <div class="calendar-header-row">
-                            <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                        </div>
-                        <div class="calendar-grid" id="calendar-grid"></div>
-                    </div>
-                </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:24px">
-                <div class="card">
-                    <div class="card-header"><h3>Shabat</h3></div>
-                    <div class="card-body" id="shabbat-info" style="padding:20px">
-                        <p style="color:var(--text-muted)">Cargando información...</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><h3>Próximas Festividades</h3></div>
-                    <div class="card-body"><ul class="list-group" id="holidays-list"></ul></div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- Yahrzeits View -->
-    <template id="view-yahrzeits">
-        <div class="view-header flex-between">
-            <div>
-                <h2 class="view-title">Gestión de Yahrzeits</h2>
-                <p class="view-subtitle">Aniversarios de fallecimiento de la congregación</p>
-            </div>
-            <button class="btn-primary" id="btn-add-yahrzeit"><i class="ph ph-plus-circle"></i> Agregar Yahrzeit</button>
-        </div>
-        <div id="yahrzeits-list" class="yahrzeit-cards"></div>
-    </template>
-
-    <!-- Communications View -->
     <template id="view-communications">
         <div class="view-header">
             <h2 class="view-title">Comunicaciones</h2>
             <p class="view-subtitle">Envía boletines y notificaciones a la congregación</p>
         </div>
+
         <div class="dashboard-grid" style="grid-template-columns: 1fr 300px;">
             <div class="card">
-                <div class="card-header"><h3>Nuevo Mensaje</h3></div>
-                <div class="card-body" style="padding:24px">
-                    <div class="form-group" style="margin-bottom:16px">
-                        <label style="display:block;margin-bottom:8px;font-weight:500;font-size:14px">Destinatarios</label>
-                        <select class="select-input" id="comm-recipients" style="width:100%">
+                <div class="card-header">
+                    <h3>Nuevo Mensaje</h3>
+                </div>
+                <div class="card-body" style="padding: 24px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Destinatarios</label>
+                        <select class="select-input" style="width: 100%;">
                             <option>Toda la congregación</option>
                             <option>Solo miembros activos</option>
                             <option>Familias con niños (Shabat Infantil)</option>
                             <option>Junta Directiva</option>
                         </select>
                     </div>
-                    <div class="form-group" style="margin-bottom:16px">
-                        <label style="display:block;margin-bottom:8px;font-weight:500;font-size:14px">Asunto</label>
-                        <input type="text" class="select-input" id="comm-subject" style="width:100%" placeholder="Ej. Horarios de Shabat y Boletín Semanal">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Asunto</label>
+                        <input type="text" class="select-input" style="width: 100%;" placeholder="Ej. Horarios de Shabat y Boletín Semanal">
                     </div>
-                    <div class="form-group" style="margin-bottom:24px">
-                        <label style="display:block;margin-bottom:8px;font-weight:500;font-size:14px">Mensaje</label>
-                        <textarea class="select-input" id="comm-message" style="width:100%;height:200px;resize:vertical" placeholder="Escribe tu mensaje aquí..."></textarea>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Mensaje</label>
+                        <textarea class="select-input" style="width: 100%; height: 200px; resize: vertical;" placeholder="Escribe tu mensaje aquí..."></textarea>
                     </div>
-                    <div style="display:flex;justify-content:flex-end;gap:12px">
-                        <button class="btn-link" style="color:var(--text-muted)"><i class="ph ph-paperclip"></i> Adjuntar</button>
-                        <button class="btn-primary" id="btn-send-message"><i class="ph ph-paper-plane-right"></i> Enviar Mensaje</button>
+                    <div class="flex-between" style="justify-content: flex-end; gap: 12px;">
+                        <button class="btn-link" style="color: var(--text-muted);"><i class="ph ph-paperclip"></i> Adjuntar archivo</button>
+                        <button class="btn-primary" onclick="alert('Mensaje enviado exitosamente')"><i class="ph ph-paper-plane-right"></i> Enviar Mensaje</button>
                     </div>
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><h3>Mensajes Recientes</h3></div>
-                <div class="card-body"><ul class="list-group" id="sent-messages-list"></ul></div>
+                <div class="card-header">
+                    <h3>Mensajes Recientes</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-item" style="padding: 12px 20px;">
+                            <div class="item-icon" style="background: var(--success-bg); color: var(--success); width: 32px; height: 32px; font-size: 16px;"><i class="ph ph-check"></i></div>
+                            <div class="item-content">
+                                <div class="item-title" style="font-size: 13px;">Recordatorio Yahrzeits</div>
+                                <div class="item-desc" style="font-size: 11px;">Enviado hoy</div>
+                            </div>
+                        </li>
+                        <li class="list-item" style="padding: 12px 20px;">
+                            <div class="item-icon" style="background: var(--info-bg); color: var(--info); width: 32px; height: 32px; font-size: 16px;"><i class="ph ph-envelope"></i></div>
+                            <div class="item-content">
+                                <div class="item-title" style="font-size: 13px;">Boletín Semanal</div>
+                                <div class="item-desc" style="font-size: 11px;">Hace 3 días</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </template>
 
-    <!-- Shabat Infantil (Kids) View -->
     <template id="view-kids">
-        <div class="view-header flex-between" style="background:linear-gradient(135deg,#FFEDD5,#FEF3C7);padding:24px;border-radius:16px;margin-bottom:32px">
+        <div class="view-header flex-between" style="background: linear-gradient(135deg, #FFEDD5, #FEF3C7); padding: 24px; border-radius: 16px; margin-bottom: 32px;">
             <div>
-                <h2 class="view-title" style="color:#D97706;display:flex;align-items:center;gap:12px">
-                    <i class="ph ph-star-four" style="font-size:32px"></i> Shabat Infantil
+                <h2 class="view-title" style="color: #D97706; display: flex; align-items: center; gap: 12px;">
+                    <i class="ph ph-star-four" style="font-size: 32px;"></i> Shabat Infantil
                 </h2>
-                <p class="view-subtitle" style="color:#92400E;font-size:16px">Material semanal para que los más pequeños aprendan y se diviertan.</p>
-                <div style="display:flex; align-items:center; gap:10px; margin-top:12px;">
-                    <label style="color:#92400E; font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Seleccionar Parashá:</label>
-                    <select id="kids-parasha-select" style="background:white; border:1px solid #F59E0B; border-radius:8px; padding:6px 12px; font-family:inherit; color:#92400E; outline:none; font-weight:600; cursor:pointer;">
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
+                <p class="view-subtitle" style="color: #92400E; font-size: 16px;">Material semanal para que los más pequeños aprendan y se diviertan.</p>
             </div>
-            <button class="btn-primary" id="btn-send-kids" style="background:#F59E0B;box-shadow:0 4px 12px rgba(245,158,11,0.3)">
+            <button class="btn-primary" style="background: #F59E0B; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
                 <i class="ph ph-paper-plane-tilt"></i> Enviar a Familias
             </button>
         </div>
+
         <div class="dashboard-grid">
             <div class="card col-span-2">
-                <div class="card-header"><h3>Parashá de la Semana: <span class="text-accent" id="kids-parasha-name" style="font-family:'Playfair Display',serif;font-size:22px">Cargando...</span></h3></div>
-                <div class="card-body" style="padding:24px">
-                    <div style="display:flex;gap:24px">
-                        <div style="flex:1">
-                            <h4 style="font-size:18px;margin-bottom:12px;color:var(--text-main)">Resumen para Niños</h4>
-                            <p id="kids-parasha-summary" style="color:var(--text-muted);margin-bottom:16px;line-height:1.6">Cargando contenido...</p>
-                            <h4 style="font-size:18px;margin-bottom:12px;margin-top:24px;color:var(--info)">Preguntas para conversar en familia <i class="ph ph-chats"></i></h4>
-                            <ul id="kids-parasha-questions" style="padding-left:20px;color:var(--text-muted);display:flex;flex-direction:column;gap:8px"></ul>
-
-                            <div style="margin-top:24px; padding:16px; border-radius:12px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2);">
-                                <h4 style="font-size:15px; margin-bottom:10px; color:#D97706; display:flex; align-items:center; gap:8px;">
-                                    <i class="ph ph-mask-happy" style="font-size:20px;"></i> Guión de Teatro para Padres
-                                </h4>
-                                <div id="kids-parasha-script" style="font-size:13px; color:var(--text-main); line-height:1.6;">
-                                    <!-- Populated by JS -->
-                                </div>
+                <div class="card-header" style="background: var(--bg-surface);">
+                    <h3>Parashá de la Semana: <span class="text-accent" style="font-family: 'Playfair Display', serif; font-size: 22px;">Noaj</span></h3>
+                </div>
+                <div class="card-body" style="padding: 24px;">
+                    <div style="display: flex; gap: 24px;">
+                        <div style="flex: 1;">
+                            <h4 style="font-size: 18px; margin-bottom: 12px; color: var(--text-main);">Resumen para Niños</h4>
+                            <p style="color: var(--text-muted); margin-bottom: 16px; line-height: 1.6;">
+                                Esta semana leemos sobre Noaj (Noé). Dios le pide a Noaj que construya una gran caja de madera llamada "Arca" porque iba a llover muchísimo. Noaj invitó a dos animalitos de cada especie para que subieran al arca y estuvieran a salvo. ¡Imagina estar en un barco lleno de perros, gatos, leones y elefantes!
+                            </p>
+                            
+                            <h4 style="font-size: 18px; margin-bottom: 12px; margin-top: 24px; color: var(--info);">Preguntas para conversar en familia <i class="ph ph-chats"></i></h4>
+                            <ul style="padding-left: 20px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                                <li>¿Cuál animal te hubiera gustado cuidar dentro del arca?</li>
+                                <li>¿Cómo crees que se sentía estar lloviendo por 40 días seguidos?</li>
+                                <li>¿Qué señal nos dio Dios al final para prometer que no habría otro diluvio? (¡Pista: tiene muchos colores!)</li>
+                            </ul>
+                        </div>
+                        <div style="width: 300px; display: flex; flex-direction: column; gap: 16px;">
+                            <div class="img-preview" style="border-radius: 12px; overflow: hidden; border: 4px solid white; box-shadow: var(--shadow-md);">
+                                <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_illustration_1778526484502.png" alt="Ilustración de Noaj" style="width: 100%; height: auto; display: block;">
                             </div>
-                        </div>
-                        <div style="width:300px;display:flex;flex-direction:column;gap:16px">
-                            <div style="border-radius:12px;overflow:hidden;border:4px solid white;box-shadow:var(--shadow-md)">
-                                <img id="kids-parasha-img" src="images/parasha_illustration.png" alt="Ilustración de la Parashá" style="width:100%;height:auto;display:block">
-                            </div>
-                            <button class="btn-primary" style="width:100%;justify-content:center;background:white;color:var(--primary);border:1px solid var(--border-color)"><i class="ph ph-download-simple"></i> Descargar Imagen</button>
+                            <button class="btn-primary" style="width: 100%; justify-content: center; background: white; color: var(--primary); border: 1px solid var(--border-color);"><i class="ph ph-download-simple"></i> Descargar Imagen</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:24px;">
-                <div class="card">
-                    <div class="card-header"><h3>Actividad de la Semana</h3></div>
-                    <div class="card-body" style="padding:24px;text-align:center">
-                        <div style="background:#F3F4F6;border-radius:12px;padding:12px;margin-bottom:16px">
-                            <img id="kids-activity-img" src="images/parasha_coloring_page.png" alt="Página para colorear" style="width:100%;border-radius:8px;border:1px solid var(--border-color)">
-                        </div>
-                        <h4 id="kids-activity-title" style="margin-bottom:8px">¡Colorea!</h4>
-                        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
-                        <button class="btn-primary" style="width:100%;justify-content:center" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
-                    </div>
-                </div>
 
-                <div class="card" id="trivia-card">
-                    <div class="card-header" style="background:#F59E0B; color:white; border-bottom:none;">
-                        <h3 style="display:flex; align-items:center; gap:8px; color:white; margin:0;"><i class="ph ph-game-controller"></i> Trivia de la Parashá</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Actividad de la Semana</h3>
+                </div>
+                <div class="card-body" style="padding: 24px; text-align: center;">
+                    <div style="background: #F3F4F6; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                        <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_coloring_page_1778526498591.png" alt="Página para colorear" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
                     </div>
-                    <div class="card-body" id="trivia-body" style="padding:24px;">
-                        <!-- Populated by JS -->
-                    </div>
+                    <h4 style="margin-bottom: 8px;">¡Colorea el Arca!</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
+                    <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="window.print()"><i class="ph ph-printer"></i> Imprimir Dibujo</button>
                 </div>
             </div>
         </div>
-    </template>
 
-    <template id="view-shorashim">
-        <div class="view-header flex-between">
-            <div>
-                <h2 class="view-title">Shorashim (Raíces)</h2>
-                <p class="view-subtitle">Árbol familiar comunitario y enlaces de genealogía</p>
-            </div>
-            <div style="display:flex;gap:12px">
-                <button class="btn-primary" id="btn-export-gedcom"><i class="ph ph-download-simple"></i> Exportar GEDCOM (.ged)</button>
-            </div>
-        </div>
-
-        <div class="card" style="padding: 24px; margin-bottom: 24px;">
-            <div class="form-group" style="display:flex; align-items:center; gap:16px; margin-bottom:0;">
-                <label style="font-weight: 600; font-size: 15px; color: var(--text-main); margin-bottom:0; white-space:nowrap;">Seleccionar Miembro:</label>
-                <select class="select-input" id="shorashim-member-select" style="min-width: 250px;">
-                    <!-- Populated by JS -->
-                </select>
-            </div>
-        </div>
-
-        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; gap: 24px;">
-            <!-- Tree Display Card -->
-            <div class="card" style="padding: 24px; display: flex; flex-direction: column; justify-content: center; min-height: 400px; background: radial-gradient(circle at center, rgba(212, 175, 55, 0.02) 0%, transparent 70%), var(--bg-surface);">
-                <div class="card-header" style="border:none; padding:0 0 20px 0; margin-bottom: 20px;">
-                    <h3>Relaciones Familiares</h3>
+        <div class="dashboard-grid" style="margin-top: 32px; grid-template-columns: 1fr 1.5fr;">
+            <!-- REGISTRO DE ASISTENCIA -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Registrar Asistencia</h3>
                 </div>
-                
-                <div class="tree-visualizer" style="display:flex; flex-direction:column; align-items:center; gap:32px; width:100%; position:relative;">
-                    <!-- SVG Connectors -->
-                    <svg id="tree-connections" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0;"></svg>
+                <div class="card-body" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Fecha del Shabat</label>
+                        <input type="date" id="att-date" class="select-input" style="width: 100%;">
+                    </div>
                     
-                    <!-- Parents Row -->
-                    <div class="tree-row" style="display:flex; gap:64px; justify-content:center; position:relative; width:100%;">
-                        <!-- Father -->
-                        <div class="tree-node-wrapper" id="node-father">
-                            <!-- Populated by JS -->
-                        </div>
-                        <!-- Mother -->
-                        <div class="tree-node-wrapper" id="node-mother">
-                            <!-- Populated by JS -->
-                        </div>
+                    <label style="display: block; font-weight: 500; font-size: 14px; color: var(--text-muted);">Cantidad de Niños</label>
+                    <div class="attendance-counter" style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 12px 0;">
+                        <button class="counter-btn" id="att-minus" style="width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-color); background: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                        <span class="counter-value" id="att-count-display" style="font-size: 32px; font-weight: 800; min-width: 60px; text-align: center; color: var(--accent);">0</span>
+                        <button class="counter-btn" id="att-plus" style="width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-color); background: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                     </div>
 
-                    <!-- Focus & Spouse Row -->
-                    <div class="tree-row" style="display:flex; gap:64px; justify-content:center; align-items:center; position:relative; width:100%;">
-                        <!-- Focus Member -->
-                        <div class="tree-node-wrapper focus-node" id="node-focus">
-                            <!-- Populated by JS -->
-                        </div>
-                        
-                        <!-- Link Indicator -->
-                        <div id="tree-relation-link" style="font-size:24px; color:var(--accent);"><i class="ph ph-infinity"></i></div>
-
-                        <!-- Spouse -->
-                        <div class="tree-node-wrapper" id="node-spouse">
-                            <!-- Populated by JS -->
-                        </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Notas / Observaciones</label>
+                        <textarea id="att-notes" class="select-input" style="width: 100%; height: 80px; resize: vertical;" placeholder="Actividades especiales, comentarios..."></textarea>
                     </div>
 
-                    <!-- Children Row -->
-                    <div class="tree-row" style="display:flex; gap:32px; justify-content:center; flex-wrap:wrap; position:relative; width:100%;">
-                        <!-- Children Nodes (Populated by JS) -->
-                        <div id="nodes-children" style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; width:100%;"></div>
-                    </div>
-
+                    <button id="btn-save-attendance" class="btn-primary" style="width: 100%; justify-content: center;"><i class="ph ph-floppy-disk"></i> Guardar Registro</button>
                 </div>
             </div>
 
-            <!-- Genealogy Tools Card -->
-            <div style="display:flex; flex-direction:column; gap:24px;">
-                <div class="card" style="padding: 24px;">
-                    <div class="card-header" style="border:none; padding:0 0 16px 0; margin-bottom:16px;">
-                        <h3>Búsqueda Genealógica</h3>
-                    </div>
-                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
-                        Investiga el linaje y las raíces (*Shorashim*) de este miembro en las bases de datos genealógicas más importantes.
-                    </p>
-                    <div class="genealogy-links" style="display:flex; flex-direction:column; gap:12px;">
-                        <a href="#" target="_blank" id="link-myheritage" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
-                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-tree" style="color:#FF7F50;"></i> Buscar en MyHeritage</span>
-                            <i class="ph ph-arrow-square-out"></i>
-                        </a>
-                        <a href="#" target="_blank" id="link-geni" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
-                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-git-merge" style="color:#00BFFF;"></i> Buscar en Geni</span>
-                            <i class="ph ph-arrow-square-out"></i>
-                        </a>
-                        <a href="#" target="_blank" id="link-familysearch" class="btn-secondary" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; padding:12px 16px;">
-                            <span style="display:flex; align-items:center; gap:10px;"><i class="ph ph-bookmarks" style="color:#8FBC8F;"></i> Buscar en FamilySearch</span>
-                            <i class="ph ph-arrow-square-out"></i>
-                        </a>
-                    </div>
+            <!-- TENDENCIAS Y HISTORIAL -->
+            <div class="card">
+                <div class="card-header flex-between">
+                    <h3>Tendencia de Asistencia</h3>
                 </div>
-
-                <div class="card" style="padding: 24px;">
-                    <div class="card-header" style="border:none; padding:0 0 16px 0; margin-bottom:16px;">
-                        <h3>Proyecto Shorashim</h3>
+                <div class="card-body" style="padding: 24px;">
+                    <div style="background: rgba(0,0,0,0.02); border-radius: 12px; padding: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                        <canvas id="attendance-chart-canvas" style="width: 100%; height: 180px; display: block;"></canvas>
                     </div>
-                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; display:flex; flex-direction:column; gap:12px;">
-                        <p>
-                            El archivo GEDCOM (.ged) es el estándar universal para árboles familiares. Al exportarlo, podrás subirlo directamente a MyHeritage, Geni o Ancestry para no tener que reescribir los datos de la comunidad.
-                        </p>
-                        <p style="background:var(--bg-main); padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:500;">
-                            💡 Las relaciones familiares se configuran editando el perfil del miembro en el directorio de Miembros.
-                        </p>
+                    
+                    <h4 style="font-size: 14px; margin-bottom: 12px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px;"><i class="ph ph-clock-counter-clockwise"></i> Historial de Shabatot</h4>
+                    <div class="attendance-history-list" id="attendance-history-list" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                        <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px;">Cargando registros...</p>
                     </div>
                 </div>
             </div>
         </div>
     </template>
 
-    <!-- Admin / Perfiles View -->
-    <template id="view-admin">
-        <div class="view-header flex-between" style="margin-bottom:16px;">
-            <div>
-                <h2 class="view-title">Admin / Perfiles</h2>
-                <p class="view-subtitle">Gestiona las cuentas de usuario y niveles de acceso al sistema</p>
-            </div>
-            <div style="display:flex;gap:12px;">
-                <button class="btn-secondary" onclick="exportAllData()" title="Descargar copia de seguridad"><i class="ph ph-download-simple"></i> Exportar Datos</button>
-                <button class="btn-secondary" onclick="importAllData()" title="Restaurar desde archivo"><i class="ph ph-upload-simple"></i> Importar Datos</button>
-                <button class="btn-primary" id="btn-add-user"><i class="ph ph-plus"></i> Nuevo Usuario</button>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:16px; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:0;">
-            <button class="btn-link admin-tab-btn active" id="tab-btn-users" onclick="switchAdminTab('users')" style="font-weight:600; color:var(--accent); text-decoration:none; padding:8px 4px 12px 4px; border-bottom:3px solid var(--accent); border-radius:0; font-size:14px; display:flex; align-items:center; gap:8px;">
-                <i class="ph ph-users" style="font-size:18px;"></i> Perfiles de Usuario
-            </button>
-            <button class="btn-link admin-tab-btn" id="tab-btn-logs" onclick="switchAdminTab('logs')" style="font-weight:600; color:var(--text-muted); text-decoration:none; padding:8px 4px 12px 4px; border-bottom:3px solid transparent; border-radius:0; font-size:14px; display:flex; align-items:center; gap:8px;">
-                <i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> Registro de Actividad
-            </button>
-        </div>
-
-        <div class="card" id="admin-users-tab-content">
-            <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin: 0;">Usuarios Registrados</h3>
-                <span class="member-count" id="admin-user-count" style="font-size: 13px; color: var(--text-muted);"></span>
-            </div>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Nombre Completo</th>
-                            <th>Email</th>
-                            <th>Rol / Cargo</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-users-table-body">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card" id="admin-logs-tab-content" style="display:none;">
-            <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-size: 15px; font-weight: 600; color: var(--text-main); margin: 0;">Registro de Actividad Reciente</h3>
-                <button class="btn-secondary btn-sm" id="btn-clear-logs" style="padding:6px 12px; font-size:12px; gap:4px; height:auto; width:auto; border-color:var(--border-color);"><i class="ph ph-trash" style="font-size:14px;"></i> Limpiar Registro</button>
-            </div>
-            <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 140px;">Hora / Fecha</th>
-                            <th style="width: 150px;">Usuario</th>
-                            <th>Acción Realizada</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-logs-table-body">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </template>
-
-    <script src="parashot.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

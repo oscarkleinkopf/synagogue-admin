@@ -1,0 +1,9 @@
+{
+  "name": "synagogue-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Administración de Sinagoga - Kehilá Admin",
+  "dependencies": {
+    "@netlify/database": "^1.0.0"
+  }
+}
