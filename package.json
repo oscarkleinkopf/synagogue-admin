@@ -1,6 +1,7 @@
 {
   "name": "synagogue-admin",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Sistema de Administración de Sinagoga - Kehilá Admin",
   "dependencies": {
