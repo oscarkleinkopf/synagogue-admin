@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "description": "Sistema de Administración de Sinagoga - Kehilá Admin",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "lint": "node --check app.js && node --check lib/html-escape.js && node --check lib/attendance-view.js && node --check netlify/functions/_shared/staff-auth.mjs && node --check netlify/functions/_shared/attendance-input.mjs && node --check netlify/functions/_shared/handle-attendance.mjs && node --check netlify/functions/_shared/read-env.mjs && node --check test/staff-auth.test.mjs && node --check test/attendance-handler.test.mjs && node --check test/html-escape.test.mjs && node --check test/attendance-view.test.mjs && node --check test/attendance-input.test.mjs",
+    "build": "node --check app.js"
+  },
   "dependencies": {
-    "@netlify/database": "^1.0.0"
+    "@netlify/database": "^1.0.0",
+    "@netlify/identity": "^2.0.1"
   }
 }

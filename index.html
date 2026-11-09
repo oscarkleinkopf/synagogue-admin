@@ -52,13 +52,29 @@
                 </a>
             </nav>
 
-            <div class="sidebar-footer">
-                <div class="user-profile">
-                    <div class="avatar">AD</div>
-                    <div class="user-info">
-                        <span class="user-name">Admin</span>
-                        <span class="user-role">Administrador</span>
+            <div class="sidebar-footer" id="staff-auth-panel">
+                <form id="staff-login-form" class="staff-login-form">
+                    <p class="staff-login-title">Acceso de staff</p>
+                    <label class="visually-hidden" for="staff-email">Correo</label>
+                    <input type="email" id="staff-email" class="staff-login-input" placeholder="Correo" autocomplete="username" required>
+                    <label class="visually-hidden" for="staff-password">Contraseña</label>
+                    <input type="password" id="staff-password" class="staff-login-input" placeholder="Contraseña" autocomplete="current-password" required>
+                    <button type="submit" class="btn-primary staff-login-btn">Entrar</button>
+                    <button type="button" id="staff-token-toggle" class="staff-token-toggle">Usar token de staff</button>
+                    <div id="staff-token-row" hidden>
+                        <label class="visually-hidden" for="staff-token">Token de staff</label>
+                        <input type="password" id="staff-token" class="staff-login-input" placeholder="Token de staff" autocomplete="off">
+                        <button type="button" id="staff-token-submit" class="btn-primary staff-login-btn">Entrar con token</button>
                     </div>
+                    <p id="staff-login-error" class="staff-login-error" hidden></p>
+                </form>
+                <div id="staff-session" class="user-profile" hidden>
+                    <div class="avatar" id="current-user-avatar">ST</div>
+                    <div class="user-info">
+                        <span class="user-name" id="current-user-name">Staff</span>
+                        <span class="user-role" id="current-user-role">Staff</span>
+                    </div>
+                    <button type="button" id="staff-logout" class="staff-logout-btn" title="Cerrar sesión">Salir</button>
                 </div>
             </div>
         </aside>
@@ -291,7 +307,7 @@
                         </div>
                         <div style="width: 300px; display: flex; flex-direction: column; gap: 16px;">
                             <div class="img-preview" style="border-radius: 12px; overflow: hidden; border: 4px solid white; box-shadow: var(--shadow-md);">
-                                <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_illustration_1778526484502.png" alt="Ilustración de Noaj" style="width: 100%; height: auto; display: block;">
+                                <img src="images/parasha_illustration.png" alt="Ilustración de Noaj" style="width: 100%; height: auto; display: block;">
                             </div>
                             <button class="btn-primary" style="width: 100%; justify-content: center; background: white; color: var(--primary); border: 1px solid var(--border-color);"><i class="ph ph-download-simple"></i> Descargar Imagen</button>
                         </div>
@@ -305,7 +321,7 @@
                 </div>
                 <div class="card-body" style="padding: 24px; text-align: center;">
                     <div style="background: #F3F4F6; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
-                        <img src="file:///C:/Users/oscar/.gemini/antigravity/brain/50fd266b-c0fa-4be1-a3b1-d9918f454643/parasha_coloring_page_1778526498591.png" alt="Página para colorear" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <img src="images/parasha_coloring_page.png" alt="Página para colorear" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
                     </div>
                     <h4 style="margin-bottom: 8px;">¡Colorea el Arca!</h4>
                     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Imprime este dibujo para que los niños lo coloreen durante el servicio o en casa.</p>
@@ -335,7 +351,7 @@
 
                     <div class="form-group">
                         <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Notas / Observaciones</label>
-                        <textarea id="att-notes" class="select-input" style="width: 100%; height: 80px; resize: vertical;" placeholder="Actividades especiales, comentarios..."></textarea>
+                        <textarea id="att-notes" class="select-input" style="width: 100%; height: 80px; resize: vertical;" maxlength="500" placeholder="Actividades especiales, comentarios..."></textarea>
                     </div>
 
                     <button id="btn-save-attendance" class="btn-primary" style="width: 100%; justify-content: center;"><i class="ph ph-floppy-disk"></i> Guardar Registro</button>
@@ -361,6 +377,6 @@
         </div>
     </template>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
