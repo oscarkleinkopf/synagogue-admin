@@ -5,6 +5,10 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
+# Dependencies and Netlify local artifacts
+node_modules/
+.netlify/
+
 # IDE and editors
 .vscode/
 .idea/

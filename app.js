@@ -1,3 +1,196 @@
+import { attendanceHistoryHtml } from './lib/attendance-view.js';
+
+const STAFF_TOKEN_KEY = 'kehila_staff_api_token';
+
+let staffSession = null;
+
+function staffHeaders(extra = {}) {
+    const headers = { ...extra };
+    if (staffSession?.kind === 'token' && staffSession.token) {
+        headers.Authorization = `Bearer ${staffSession.token}`;
+    }
+    return headers;
+}
+
+function staffFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: staffHeaders(options.headers),
+    });
+}
+
+function setStaffLoginError(message) {
+    const errorEl = document.getElementById('staff-login-error');
+    if (!errorEl) return;
+    if (message) {
+        errorEl.hidden = false;
+        errorEl.textContent = message;
+    } else {
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+    }
+}
+
+function renderStaffAuthPanel() {
+    const loginForm = document.getElementById('staff-login-form');
+    const sessionEl = document.getElementById('staff-session');
+    const nameEl = document.getElementById('current-user-name');
+    const roleEl = document.getElementById('current-user-role');
+    const avatarEl = document.getElementById('current-user-avatar');
+
+    if (staffSession) {
+        if (loginForm) loginForm.hidden = true;
+        if (sessionEl) sessionEl.hidden = false;
+        if (nameEl) {
+            nameEl.textContent = staffSession.name || staffSession.email || 'Staff';
+        }
+        if (roleEl) roleEl.textContent = staffSession.kind === 'token' ? 'Token de staff' : 'Staff';
+        if (avatarEl) {
+            const label = staffSession.name || staffSession.email || 'ST';
+            avatarEl.textContent = label.slice(0, 2).toUpperCase();
+        }
+    } else {
+        if (loginForm) loginForm.hidden = false;
+        if (sessionEl) sessionEl.hidden = true;
+        if (nameEl) nameEl.textContent = 'Sin sesión';
+        if (roleEl) roleEl.textContent = 'Requiere staff';
+        if (avatarEl) avatarEl.textContent = '--';
+    }
+}
+
+async function restoreStaffSession() {
+    const storedToken = sessionStorage.getItem(STAFF_TOKEN_KEY);
+    if (storedToken) {
+        staffSession = { kind: 'token', token: storedToken, name: 'Staff' };
+        renderStaffAuthPanel();
+        return;
+    }
+
+    try {
+        const res = await staffFetch('/api/auth/me');
+        if (!res.ok) {
+            staffSession = null;
+            renderStaffAuthPanel();
+            return;
+        }
+        const profile = await res.json();
+        staffSession = {
+            kind: 'identity',
+            email: profile.email,
+            name: profile.name || profile.email,
+        };
+    } catch {
+        staffSession = null;
+    }
+    renderStaffAuthPanel();
+}
+
+async function loginWithIdentity(email, password) {
+    const res = await staffFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+    });
+    if (res.status === 403) {
+        throw new Error('Esta cuenta no tiene rol de staff.');
+    }
+    if (!res.ok) {
+        throw new Error('No se pudo iniciar sesión. Revisa las credenciales o usa un token de staff.');
+    }
+    const profile = await res.json();
+    sessionStorage.removeItem(STAFF_TOKEN_KEY);
+    staffSession = {
+        kind: 'identity',
+        email: profile.email,
+        name: profile.name || profile.email,
+    };
+}
+
+function loginWithStaffToken(token) {
+    const value = String(token || '').trim();
+    if (!value) {
+        throw new Error('Ingresa un token de staff.');
+    }
+    sessionStorage.setItem(STAFF_TOKEN_KEY, value);
+    staffSession = { kind: 'token', token: value, name: 'Staff' };
+}
+
+async function logoutStaff() {
+    sessionStorage.removeItem(STAFF_TOKEN_KEY);
+    try {
+        await staffFetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+        // Local session is cleared even if Identity logout fails.
+    }
+    staffSession = null;
+}
+
+function initStaffAuth() {
+    const loginForm = document.getElementById('staff-login-form');
+    const tokenToggle = document.getElementById('staff-token-toggle');
+    const tokenRow = document.getElementById('staff-token-row');
+    const tokenSubmit = document.getElementById('staff-token-submit');
+    const logoutBtn = document.getElementById('staff-logout');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setStaffLoginError('');
+            const email = document.getElementById('staff-email')?.value || '';
+            const password = document.getElementById('staff-password')?.value || '';
+            try {
+                await loginWithIdentity(email, password);
+                renderStaffAuthPanel();
+                if (state.currentView === 'kids') loadAttendance();
+            } catch (err) {
+                setStaffLoginError(err.message);
+            }
+        });
+    }
+
+    if (tokenToggle && tokenRow) {
+        tokenToggle.addEventListener('click', () => {
+            tokenRow.hidden = !tokenRow.hidden;
+        });
+    }
+
+    if (tokenSubmit) {
+        tokenSubmit.addEventListener('click', () => {
+            setStaffLoginError('');
+            try {
+                loginWithStaffToken(document.getElementById('staff-token')?.value || '');
+                renderStaffAuthPanel();
+                if (state.currentView === 'kids') loadAttendance();
+            } catch (err) {
+                setStaffLoginError(err.message);
+            }
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await logoutStaff();
+            renderStaffAuthPanel();
+            attendanceCache = [];
+            if (state.currentView === 'kids') {
+                renderAttendanceHistory();
+                drawAttendanceChart();
+            }
+        });
+    }
+}
+
+function boot() {
+    initStaffAuth();
+    renderStaffAuthPanel();
+    restoreStaffSession().then(() => {
+        if (state.currentView === 'kids') loadAttendance();
+    });
+    initNavigation();
+    renderView(state.currentView);
+}
+
 // Mock Data
 const mockYahrzeits = [
     { name: "Isaac Cohen", relation: "Padre de David Cohen", date: "15 Mayo 2026", days: 4, type: "primary" },
@@ -29,10 +222,11 @@ const viewContainer = document.getElementById('view-container');
 const navItems = document.querySelectorAll('.nav-item');
 
 // Initialization
-document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
-    renderView(state.currentView);
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}
 
 // Navigation Logic
 function initNavigation() {
@@ -217,8 +411,30 @@ function initKidsView() {
 }
 
 async function loadAttendance() {
+    const container = document.getElementById('attendance-history-list');
+
+    if (!staffSession) {
+        attendanceCache = [];
+        if (container) {
+            container.textContent = 'Inicia sesión con una cuenta de staff para ver y registrar asistencia.';
+        }
+        drawAttendanceChart();
+        return;
+    }
+
     try {
-        const res = await fetch('/api/attendance');
+        const res = await staffFetch('/api/attendance');
+        if (res.status === 401 || res.status === 403) {
+            staffSession = null;
+            sessionStorage.removeItem(STAFF_TOKEN_KEY);
+            renderStaffAuthPanel();
+            attendanceCache = [];
+            if (container) {
+                container.textContent = 'Inicia sesión con una cuenta de staff para ver y registrar asistencia.';
+            }
+            drawAttendanceChart();
+            return;
+        }
         if (!res.ok) throw new Error('No se pudo cargar la asistencia');
         const rows = await res.json();
         attendanceCache = rows.map(r => ({
@@ -247,6 +463,11 @@ async function saveAttendanceRecord() {
     const dateVal = dateInput ? dateInput.value : '';
     const notes = notesInput ? notesInput.value : '';
 
+    if (!staffSession) {
+        alert('Inicia sesión con una cuenta de staff para registrar asistencia.');
+        return;
+    }
+
     if (!dateVal || attendanceCount <= 0) {
         alert('Por favor, ingresa una fecha y cantidad de niños mayor a 0.');
         return;
@@ -260,11 +481,15 @@ async function saveAttendanceRecord() {
     };
 
     try {
-        const res = await fetch('/api/attendance', {
+        const res = await staffFetch('/api/attendance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(record)
         });
+        if (res.status === 401 || res.status === 403) {
+            alert('No autorizado. Inicia sesión como staff e inténtalo de nuevo.');
+            return;
+        }
         if (!res.ok) throw new Error('Error al guardar');
         alert('✅ Registro guardado exitosamente.');
         
@@ -296,18 +521,7 @@ function renderAttendanceHistory() {
     const container = document.getElementById('attendance-history-list');
     if (!container) return;
 
-    if (attendanceCache.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px;">No hay registros aún.</p>';
-        return;
-    }
-
-    container.innerHTML = attendanceCache.slice().reverse().map(r => `
-        <div class="attendance-history-item">
-            <span class="att-date">${r.date}</span>
-            <span class="att-count">${r.count} niños</span>
-            <span class="att-notes" title="${r.notes}">${r.notes || '—'}</span>
-        </div>
-    `).join('');
+    container.innerHTML = attendanceHistoryHtml(attendanceCache);
 }
 
 function drawAttendanceChart() {
